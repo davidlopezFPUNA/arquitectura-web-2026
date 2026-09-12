@@ -67,12 +67,13 @@ Proyecto Integrador - Arquitectura Web 2026: Despliegue de PocketBase en Ubuntu 
 * **Título:** Selección de PocketBase, Nginx como Proxy Inverso y Red en Modo Puente.
 * **Estado:** Aceptado.
 * **Autores:** David López, Junior Legal.
-* **Contexto:** Se requiere desplegar una aplicación observable sobre Ubuntu Server 24.04 LTS optimizando los recursos asignados en la máquina virtual (2 vCPU, 2 GB RAM).
-* **Decisión:** 
-  1. Se elige **PocketBase** como backend debido a su arquitectura de binario único embebido con SQLite, eliminando dependencias externas pesadas.
-  2. Se establece el modo de red **Adaptador Puente (*Bridged*)** para integrar la VM directamente a la subred física (`192.168.1.0/27`) y habilitar administración remota vía SSH.
-  3. Se define **Nginx** como proxy inverso para exponer la aplicación en el puerto HTTP estándar `80`.
-* **Consecuencias:** Despliegue altamente eficiente, facilidad de gestión como servicio de `systemd` y bajo consumo de recursos de hardware.
+* **Contexto:** Se requiere desplegar una aplicación observable sobre Ubuntu Server 24.04 LTS optimizando los recursos asignados en la máquina virtual (2 vCPU, 2 GB RAM). Para ello se evaluaron dos candidatos:
+  * **PocketBase v0.22.21 (Seleccionado):** Licencia MIT, binario único en Go con SQLite embebida.
+  * **Strapi v4 (Descartado):** Licencia MIT, Node.js + DB externa. Descartado por requerir dependencias complejas y mayor consumo de memoria RAM.
+* **Decisión:**
+  i. Se elige **PocketBase** como backend debido a su arquitectura de binario único embebido con SQLite, eliminando dependencias externas pesadas y acelerando el tiempo de despliegue.
+  ii. Se establece el modo de red **Adaptador Puente (Bridged)** para integrar la VM directamente a la subred física (`192.168.1.0/27`) y habilitar administración remota vía SSH.
+  iii. Se define **Nginx** como proxy inverso para exponer la aplicación en el puerto HTTP estándar `80`.
 
 ---
 
