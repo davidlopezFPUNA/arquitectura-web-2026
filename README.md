@@ -119,7 +119,7 @@ HTTP/1.1 405 Method Not Allowed
 Server: nginx/1.24.0 (Ubuntu)
 
 $ git rev-parse HEAD
-6997003535 minutes ago...
+6997003
 ```
 ---
 
