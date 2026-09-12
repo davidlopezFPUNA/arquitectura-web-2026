@@ -71,9 +71,9 @@ Proyecto Integrador - Arquitectura Web 2026: Despliegue de PocketBase en Ubuntu 
   * **PocketBase v0.22.21 (Seleccionado):** Licencia MIT, binario único en Go con SQLite embebida.
   * **Strapi v4 (Descartado):** Licencia MIT, Node.js + DB externa. Descartado por requerir dependencias complejas y mayor consumo de memoria RAM.
 * **Decisión:**
-  * **i. Se elige **PocketBase** como backend debido a su arquitectura de binario único embebido con SQLite, eliminando dependencias externas pesadas y acelerando el tiempo de despliegue.
-  * **ii. Se establece el modo de red **Adaptador Puente (Bridged)** para integrar la VM directamente a la subred física (`192.168.1.0/27`) y habilitar administración remota vía SSH.
-  * **iii. Se define **Nginx** como proxy inverso para exponer la aplicación en el puerto HTTP estándar `80`.
+  * i. Se elige **PocketBase** como backend debido a su arquitectura de binario único embebido con SQLite, eliminando dependencias externas pesadas y acelerando el tiempo de despliegue.
+  * ii. Se establece el modo de red **Adaptador Puente (Bridged)** para integrar la VM directamente a la subred física (`192.168.1.0/27`) y habilitar administración remota vía SSH.
+  * iii. Se define **Nginx** como proxy inverso para exponer la aplicación en el puerto HTTP estándar `80`.
 
 ---
 
