@@ -59,3 +59,46 @@ Proyecto Integrador - Arquitectura Web 2026: Despliegue de PocketBase en Ubuntu 
              │
              ▼
  [ Base de Datos: SQLite (Archivo embebido en disco) ]
+```
+---
+
+## 4. Registro de Decisiones de Arquitectura (ADR-001)
+
+* **Título:** Selección de PocketBase, Nginx como Proxy Inverso y Red en Modo Puente.
+* **Estado:** Aceptado.
+* **Autores:** David López, Junior Legal.
+* **Contexto:** Se requiere desplegar una aplicación observable sobre Ubuntu Server 24.04 LTS optimizando los recursos asignados en la máquina virtual (2 vCPU, 2 GB RAM).
+* **Decisión:** 
+  1. Se elige **PocketBase** como backend debido a su arquitectura de binario único embebido con SQLite, eliminando dependencias externas pesadas.
+  2. Se establece el modo de red **Adaptador Puente (*Bridged*)** para integrar la VM directamente a la subred física (`192.168.1.0/27`) y habilitar administración remota vía SSH.
+  3. Se define **Nginx** como proxy inverso para exponer la aplicación en el puerto HTTP estándar `80`.
+* **Consecuencias:** Despliegue altamente eficiente, facilidad de gestión como servicio de `systemd` y bajo consumo de recursos de hardware.
+
+---
+
+## 5. Evidencias de Comandos Ejecutados (Línea Base)
+
+```bash
+# Identificación del sistema y kernel
+$ hostnamectl
+Static hostname: equipo-vm
+Operating System: Ubuntu 24.04.4 LTS
+Kernel: Linux 6.8.0-139-generic
+Architecture: x86-64
+
+# Recursos de Hardware (CPU y RAM)
+$ lscpu | grep -E "Model name|CPU\(s\):"
+CPU(s):              2
+Model name:          AMD FX(tm)-4300 Quad-Core Processor
+
+$ free -h
+Mem Total: 1.9Gi | Used: 316Mi | Free: 1.5Gi
+
+# Red e Interfaces
+$ ip a
+inet 192.168.1.25/27 brd 192.168.1.31 scope global dynamic enp0s3
+
+# Puertos Escuchando en el Sistema
+$ sudo ss -tulpn
+Netid   State    Local Address:Port
+tcp     LISTEN   0.0.0.0:22 (sshd)
