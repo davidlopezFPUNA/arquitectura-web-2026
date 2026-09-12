@@ -3,7 +3,8 @@ Proyecto Integrador - Arquitectura Web 2026: Despliegue de PocketBase en Ubuntu 
 
 # Proyecto Integrador — Arquitectura Web 2026
 
-**Estudiante:** David López, Junior Legal,
+**Estudiante:** David López, Junior Legal
+
 **Institución:** Facultad Politécnica - Universidad Nacional de Asunción (FPUNA)  
 **Sistema Operativo:** Ubuntu Server 24.04.4 LTS (x86_64)  
 **Infraestructura:** VirtualBox (2 vCPU, 2 GB RAM, 20 GB Disk)  
