@@ -102,7 +102,7 @@ inet 192.168.1.25/27 brd 192.168.1.31 scope global dynamic enp0s3
 $ sudo ss -tulpn
 Netid   State    Local Address:Port
 tcp     LISTEN   0.0.0.0:22 (sshd)
-
+```
 ---
 
 ## 6. Evidencia de Funcionamiento
