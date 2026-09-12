@@ -89,20 +89,37 @@ Architecture: x86-64
 
 # Recursos de Hardware (CPU y RAM)
 $ lscpu | grep -E "Model name|CPU\(s\):"
-CPU(s):              2
-Model name:          AMD FX(tm)-4300 Quad-Core Processor
+CPU(s):         2
+Model name:     AMD FX(tm)-4300 Quad-Core Processor
 
 $ free -h
 Mem Total: 1.9Gi | Used: 316Mi | Free: 1.5Gi
 
-# Red e Interfaces
+# Red, Enrutamiento y DNS
 $ ip a
 inet 192.168.1.25/27 brd 192.168.1.31 scope global dynamic enp0s3
 
-# Puertos Escuchando en el Sistema
-$ sudo ss -tulpn
-Netid   State    Local Address:Port
-tcp     LISTEN   0.0.0.0:22 (sshd)
+$ ip route
+default via 192.168.1.1 dev enp0s3 proto static
+192.168.1.0/27 dev enp0s3 proto kernel scope link src 192.168.1.25
+
+$ resolvectl status
+Link 2 (enp0s3): Current DNS Server: 192.168.1.1
+
+# Puertos Escuchando en el Sistema (SSH, Nginx, PocketBase)
+$ sudo ss -lntup
+Netid  State   Recv-Q  Send-Q   Local Address:Port   Process
+tcp    LISTEN  0       511            0.0.0.0:80     ("nginx")
+tcp    LISTEN  0       4096         127.0.0.1:8090   ("pocketbase")
+tcp    LISTEN  0       128            0.0.0.0:22     ("sshd")
+
+# Verificación del servicio Web y Versión de Git
+$ curl -I [http://127.0.0.1](http://127.0.0.1)
+HTTP/1.1 405 Method Not Allowed
+Server: nginx/1.24.0 (Ubuntu)
+
+$ git rev-parse HEAD
+6997003535 minutes ago...
 ```
 ---
 
