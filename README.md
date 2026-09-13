@@ -585,5 +585,16 @@ Esta sección consolida los 12 puntos de evaluación requeridos para la validaci
 * **Captura:**
 <img width="1437" height="335" alt="F1-E2_ss_ports" src="https://github.com/user-attachments/assets/4e9a39fa-c215-4711-a13b-b95aaad88ca5" />
 
+---
 
-
+### F2-E1: Resolución Local y Proxy HTTP (Puerto 80)
+* **ID:** F2-E1
+* **Título:** Validación de dominio local y redirección/proxy HTTP a HTTPS.
+* **Fecha:** 13/09/2026
+* **Origen:** Host Cliente (Windows / PowerShell).
+* **Comando Ejecutado:** `curl.exe -i http://proyecto-web.local/`
+* **Salida Relevante:** `HTTP/1.1 301 Moved Permanently`, `Server: nginx/1.24.0 (Ubuntu)`, `Location: https://proyecto-web.local/`.
+* **Explicación y Conclusión:** Comprueba la correcta resolución del dominio local `proyecto-web.local` y la respuesta del proxy Nginx en el puerto 80 aplicando redirección segura a HTTPS.
+* **Archivo de Log:** `logs/f2_http_proxy.txt`
+* **Captura:**
+<img width="1096" height="350" alt="F2-E1_http_proxy" src="https://github.com/user-attachments/assets/547f4130-6e19-43cf-bf8c-7aa43efde34a" />
