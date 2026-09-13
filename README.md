@@ -281,3 +281,32 @@ Análisis del flujo de tramas registradas en el archivo `captura_https.pcap` sob
   * `Application Data` (`length 3791 B`): Transferencia de la carga útil HTTP cifrada sin posibilidad de lectura en texto claro en la traza.
 * **Cierre de Conexión:**
   * `Cliente -> Servidor [FIN, ACK]` (`Flags [F.]`): Finalización limpia y ordenada de la sesión TCP.
+
+# Entrega 4: Resiliencia, seguridad, cierre y defensa 
+#2 Auditar cabeceras de seguridad: HSTS 
+```
+PS  $response = Invoke-WebRequest -Uri https://proyecto-web.local/_/ -SkipCertificateCheck
+PS  $response.Headers
+
+Key                       Value
+---                       -----
+Server                    {nginx/1.28.3, (Ubuntu)}
+Date                      {Sun, 13 Sep 2026 17:02:38 GMT}
+Connection                {keep-alive}
+Accept-Ranges             {bytes}
+Vary                      {Origin, Accept-Encoding}
+X-Content-Type-Options    {nosniff, nosniff}
+X-Frame-Options           {SAMEORIGIN}
+X-XSS-Protection          {1; mode=block}
+Strict-Transport-Security {max-age=31536000; includeSubDomains}
+Content-Security-Policy   {default-src 'self';}
+Referrer-Policy           {no-referrer-when-downgrade}
+Content-Type              {text/html; charset=utf-8}
+```
+Strict-Transport-Security (HSTS): obliga al navegador a usar siempre HTTPS y evita conexiones inseguras, reforzando la confianza cuando el certificado es válido.
+
+Content-Security-Policy (CSP): en este caso restringe la carga de recursos a 'self', lo que previene ataques de inyección de código (XSS) al no permitir scripts o estilos externos sin autorización.
+
+X-Content-Type-Options: configurado como nosniff, impide que el navegador intente adivinar tipos de contenido, reduciendo el riesgo de ejecución de archivos maliciosos.
+
+Referrer-Policy: definido como no-referrer-when-downgrade, controla la información de referencia enviada al navegar, protegiendo datos sensibles al evitar que se transmitan a sitios inseguros.
