@@ -1,0 +1,16 @@
+{
+    "page": 1,
+    "perPage": 100,
+    "totalItems": -1,
+    "totalPages": -1,
+    "items": [
+        {
+            "id": "jnjd6872ai3l0gd",
+            "created": "2026-09-13 17:30:49.499Z",
+            "updated": "2026-09-13 17:30:49.499Z",
+            "avatar": 0,
+            "email": "jlegal@admin.net",
+            "added-info": "a123456"
+        }
+    ]
+}
