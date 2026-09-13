@@ -535,3 +535,25 @@ En concordancia con los requerimientos del proyecto, se identificaron y corrigie
 1. **Hardenizado Exitoso:** El servidor `equipo-vm` cuenta con una superficie de red estrictamente acotada, protegiendo los servicios internos y garantizando comunicaciones seguras cifradas de punta a punta mediante Nginx y HTTPS.
 2. **Elevada Resiliencia Autónoma:** La integración con `systemd` asegura la recuperación inmediata de los componentes críticos del backend tanto ante fallos inesperados de proceso como tras reinicios completos del sistema físico o virtual.
 3. **Eficiencia y Desempeño:** Las pruebas de estrés moderado demostraron un rendimiento de $199.18\text{ req/s}$ con latencias promedio de $50.2\text{ ms}$ y consumo mínimo de recursos ($37.1\text{ MiB}$ RAM en el proceso backend), asegurando la viabilidad operativa de la solución desplegada.
+
+---
+
+## Entrega 5 — Matriz Mínima de Pruebas Globales (P01 — P12)
+
+Esta sección consolida los 12 puntos de evaluación requeridos para la validación global de la arquitectura, unificando los hallazgos y evidencias obtenidas a lo largo del proyecto integrador.
+
+| ID | Dimensión | Prueba y Evidencia Registrada | Resultado de Aceptación | Estado |
+| :---: | :--- | :--- | :--- | :---: |
+| **P01** | **Direccionamiento** | `ip a` / `ip route`: IP `192.168.1.25/27`, Gateway `192.168.1.1`, Interfaz `enp0s3` (Adaptador Puente). | Direccionamiento coherente y alineado a la subred del anfitrión. | **Aprobado** |
+| **P02** | **Conectividad** | Ping y conexiones TCP a puertos 22, 80 y 443 desde Host Windows. Traza ARP comprobada. | Alcance demostrado desde el cliente anfitrión sin bloqueos. | **Aprobado** |
+| **P03** | **Puertos** | `sudo ss -lntup`: SSH (`:22`), Nginx (`:80`, `:443`), PocketBase (`127.0.0.1:8090`). | Solo servicios justificados escuchando; backend aislado localmente. | **Aprobado** |
+| **P04** | **Nombre** | Mapeo en `hosts` de `proyecto-web.local` $\rightarrow$ `192.168.1.25`. Resolución DNS probada. | El nombre resuelve a la VM de forma repetible en la LAN. | **Aprobado** |
+| **P05** | **HTTP** | Solicitudes `curl -i`: Métodos GET, HEAD, estados `200 OK`, `404 Not Found`, `405 Method Not Allowed`. | Respuestas válidas con semántica HTTP explicada. | **Aprobado** |
+| **P06** | **Proxy Inverso** | Flujo `Cliente -> Nginx (443) -> PocketBase (127.0.0.1:8090)`. Registros en `journalctl`. | Proxy funcional; backend protegido sin exposición pública directa. | **Aprobado** |
+| **P07** | **TLS** | Certificado X.509 autofirmado (RSA 2048, SAN: `proyecto-web.local`, TLS 1.3). | HTTPS funcional; causa del aviso de confianza en navegador justificada. | **Aprobado** |
+| **P08** | **Rendimiento** | Métricas `curl -w` (10 it.): DNS 1.88 ms, TCP 2.30 ms, TLS 13.95 ms, TTFB 18.46 ms, Total 18.53 ms. | Tabla estadística detallada e interpretación prudente del canal TLS. | **Aprobado** |
+| **P09** | **Caché** | Análisis de assets en PocketBase (`200 OK`); diseño de reglas `Cache-Control` / `304` en Nginx. | Comportamiento del backend demostrado y optimización documentada. | **Aprobado** |
+| **P10** | **Seguridad** | UFW activo (22, 80, 443); 6 cabeceras de seguridad inyectadas (`nosniff`, CSP, HSTS, etc.). | Hallazgos corregidos y superficie acotada al mínimo privilegio. | **Aprobado** |
+| **P11** | **Resiliencia** | `systemctl stop/start` (502 Bad Gateway $\rightarrow$ 200 OK); `sudo reboot` con persistencia `systemd`. | Falla observable, manejo controlado y recuperación autónoma post-boot. | **Aprobado** |
+| **P12** | **Recursos** | Benchmarking `ab -n 100 -c 10` ($199.18\text{ req/s}$); RAM al $16.6\%$ (Pico PB: $37.1\text{ MiB}$), Disco al $50\%$. | Mediciones de CPU/RAM/Disco correlacionadas con la prueba de carga. | **Aprobado** |
+
