@@ -626,3 +626,17 @@ Esta sección consolida los 12 puntos de evaluación requeridos para la validaci
 * **Archivo de Log:** `logs/f3_tls_cert.txt`
 * **Captura:**
 <img width="1363" height="148" alt="F3-E1_tls_cert" src="https://github.com/user-attachments/assets/00c6beb4-708a-4966-8eb2-81c8947e5120" />
+
+---
+
+### F3-E2: Métricas de Tiempos de Conexión TLS y TTFB
+* **ID:** F3-E2
+* **Título:** Desglose de latencias de red, TLS Handshake y Time To First Byte (TTFB).
+* **Fecha:** 13/09/2026
+* **Origen:** VM Ubuntu (`equipo-vm`).
+* **Comando Ejecutado:** `curl -w "DNS: %{time_namelookup}s | TCP: %{time_connect}s | TLS: %{time_appconnect}s | TTFB: %{time_starttransfer}s | Total: %{time_total}s\n" -sk -I https://proyecto-web.local/`
+* **Salida Relevante:** `DNS: 0.002253s | TCP: 0.002747s | TLS: 0.036032s | TTFB: 0.046312s | Total: 0.047588s`
+* **Explicación y Conclusión:** Muestra el rendimiento y sobrecoste de negociación HTTPS/TLS (aprox. 36ms de handshake) dentro de la red local, con un TTFB óptimo inferior a 50ms.
+* **Archivo de Log:** `logs/f3_curl_timing.txt`
+* **Captura:**
+<img width="1435" height="290" alt="F3-E2_curl_timing" src="https://github.com/user-attachments/assets/a3926d26-cbb5-43b0-b277-37a16c61630c" />
