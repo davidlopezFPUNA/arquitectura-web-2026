@@ -180,7 +180,7 @@ sudo systemctl restart pocketbase
 
 <img width="1533" height="766" alt="Captura de pantalla 2026-09-12 214951" src="https://github.com/user-attachments/assets/1143c519-5e58-46e7-ac48-1f8e29b47f9d" />
 
-# Entregable 3: Habilitación de HTTPS, Análisis TLS y Rendimiento
+# Entrega 3: DNS local, TLS, HTTP y medición
 
 Este documento recopila la configuración, la caracterización técnica del certificado X.509, las pruebas de redirección HTTP/HTTPS, las métricas de latencia y el análisis de tráfico de red para la infraestructura del dominio `proyecto-web.local`.
 
