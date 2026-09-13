@@ -538,7 +538,7 @@ En concordancia con los requerimientos del proyecto, se identificaron y corrigie
 
 ---
 
-## Entrega 5 — Matriz Mínima de Pruebas Globales (P01 — P12)
+## Entrega 5 — Matriz Mínima de Pruebas
 
 Esta sección consolida los 12 puntos de evaluación requeridos para la validación global de la arquitectura, unificando los hallazgos y evidencias obtenidas a lo largo del proyecto integrador.
 
@@ -558,6 +558,8 @@ Esta sección consolida los 12 puntos de evaluación requeridos para la validaci
 | **P12** | **Recursos** | Benchmarking `ab -n 100 -c 10` ($199.18\text{ req/s}$); RAM al $16.6\%$ (Pico PB: $37.1\text{ MiB}$), Disco al $50\%$. | Mediciones de CPU/RAM/Disco correlacionadas con la prueba de carga. | **Aprobado** |
 
 ---
+
+## Entrega 6 — Evidencias y capturas
 
 ### F1-E1: Identificación del Sistema y Red Baseline
 * **ID:** F1-E1
