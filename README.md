@@ -10,6 +10,7 @@ Proyecto Integrador - Arquitectura Web 2026: Despliegue de PocketBase en Ubuntu 
 **Infraestructura:** VirtualBox (2 vCPU, 2 GB RAM, 20 GB Disk)  
 
 ---
+### Entrega 1. Descubrimiento, selección y linea base
 
 ## 1. Ficha Técnica de la Aplicación
 
@@ -126,3 +127,37 @@ $ git rev-parse HEAD
 ## 6. Evidencia de Funcionamiento
 
 <img width="1524" height="766" alt="Captura de pantalla 2026-09-12 185903 png" src="https://github.com/user-attachments/assets/b93043b4-bb3a-49b8-83a4-0c21bfa189ce" />
+
+---
+## Entrega 2 — Instalación y Publicación HTTP
+
+### 1. Dominio Local y Proxy Inverso
+Se configuró la resolución por nombre en el archivo `hosts` del equipo anfitrión y el proxy inverso en Nginx para publicar el servicio en el puerto HTTP 80.
+
+* **Dominio local mapeado:** `proyecto-web.local` → `192.168.1.25`
+* **Acceso HTTP público (Nginx):** `http://proyecto-web.local/` (Puerto 80)
+* **Binding interno (PocketBase):** `http://127.0.0.1:8090` (Aislado de la red pública)
+
+---
+Entrega 1 — Descubrimiento, selección y línea base
+### 2. Comandos de Diagnóstico y Evidencias HTTP
+
+```text
+# Validación de sintaxis en Nginx
+$ sudo nginx -t
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+
+# Estado del servicio administrado por systemd
+$ sudo systemctl status pocketbase
+● pocketbase.service - PocketBase service
+     Loaded: loaded (/etc/systemd/system/pocketbase.service; enabled)
+     Active: active (running)
+
+# Pruebas de cabeceras HTTP desde cliente
+$ curl.exe -i [http://proyecto-web.local/_/](http://proyecto-web.local/_/)
+HTTP/1.1 200 OK
+Server: nginx/1.24.0 (Ubuntu)
+Content-Type: text/html; charset=utf-8
+X-Frame-Options: SAMEORIGIN
+X-Content-Type-Options: nosniff
