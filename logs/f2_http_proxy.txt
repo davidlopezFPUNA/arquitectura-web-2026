@@ -1,0 +1,18 @@
+HTTP/1.1 301 Moved Permanently
+Server: nginx/1.24.0 (Ubuntu)
+Date: Sun, 13 Sep 2026 21:09:43 GMT
+Content-Type: text/html
+Content-Length: 178
+Connection: keep-alive
+Location: https://proyecto-web.local/
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';
+Referrer-Policy: strict-origin-when-cross-origin
+
+<html>
+<head><title>301 Moved Permanently</title></head>
+<body>
+<center><h1>301 Moved Permanently</h1></center>
+<hr><center>nginx/1.24.0 (Ubuntu)</center>
+</body>
+</html>

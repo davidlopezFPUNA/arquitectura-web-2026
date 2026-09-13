@@ -1,0 +1,14 @@
+HTTP/1.1 405 Method Not Allowed
+Server: nginx/1.24.0 (Ubuntu)
+Date: Sun, 13 Sep 2026 21:22:25 GMT
+Connection: keep-alive
+Allow: OPTIONS, GET
+Vary: Origin
+X-Content-Type-Options: nosniff
+X-Frame-Options: SAMEORIGIN
+X-Xss-Protection: 1; mode=block
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';
+Referrer-Policy: strict-origin-when-cross-origin
+
+DNS: 0.002337s | TCP: 0.003113s | TLS: 0.023985s | TTFB: 0.027139s | Total: 0.027200s

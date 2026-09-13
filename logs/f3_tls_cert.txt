@@ -1,0 +1,60 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number:
+            4f:ef:79:b2:1d:22:7b:ae:1d:b5:ea:19:38:57:54:a0:2c:9e:37:c8
+        Signature Algorithm: sha256WithRSAEncryption
+        Issuer: C = PY, ST = Central, L = Asuncion, O = ArquitecturaWeb, CN = proyecto-web.local
+        Validity
+            Not Before: Sep 13 01:09:23 2026 GMT
+            Not After : Sep 13 01:09:23 2027 GMT
+        Subject: C = PY, ST = Central, L = Asuncion, O = ArquitecturaWeb, CN = proyecto-web.local
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                Public-Key: (2048 bit)
+                Modulus:
+                    00:91:71:05:9e:55:b5:66:7f:25:64:de:da:fc:49:
+                    55:c1:0e:2e:d1:64:ac:7f:fa:7f:41:5e:3b:cd:f9:
+                    bc:b7:bb:b1:aa:25:b2:81:c3:82:7b:92:dc:59:19:
+                    1e:bb:9c:14:0d:bf:c8:d4:84:a3:8c:00:67:71:48:
+                    4e:72:d7:bd:83:73:a5:e6:fc:8e:b4:0f:72:f0:a9:
+                    52:e2:30:0c:10:50:46:a6:b0:84:2a:8e:6b:d8:8a:
+                    63:1e:79:79:2f:cc:67:e4:7a:20:9d:83:2f:bc:14:
+                    ab:c8:42:f8:64:01:77:7a:ea:67:28:a3:52:a2:4f:
+                    9d:87:93:9e:82:70:16:a6:eb:86:0a:c4:5c:9c:0b:
+                    f6:4f:00:7a:22:7c:a9:df:ab:1e:9b:4d:60:7b:2c:
+                    75:4b:e0:e6:98:50:27:01:42:6e:9c:b3:0d:17:88:
+                    cc:24:1b:3c:b9:59:36:a5:a8:ec:a1:84:93:c9:ed:
+                    91:55:d4:9c:e8:6d:0b:39:37:8b:88:85:e0:9e:19:
+                    4a:74:1e:be:68:8e:b4:31:33:82:04:50:d6:4d:df:
+                    dc:b0:75:dc:e5:bb:1b:4a:04:66:28:a6:62:6b:ae:
+                    60:f2:a4:7a:be:2a:52:dd:82:34:82:66:db:8c:f9:
+                    51:67:22:ef:90:f7:10:b2:99:bf:75:f3:ca:00:6d:
+                    e2:1b
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Subject Key Identifier: 
+                12:B5:AB:92:B2:53:18:82:B9:A6:C5:F3:6B:4A:55:82:20:A6:9D:6B
+            X509v3 Authority Key Identifier: 
+                12:B5:AB:92:B2:53:18:82:B9:A6:C5:F3:6B:4A:55:82:20:A6:9D:6B
+            X509v3 Basic Constraints: critical
+                CA:TRUE
+            X509v3 Subject Alternative Name: 
+                DNS:proyecto-web.local, IP Address:192.168.1.25
+    Signature Algorithm: sha256WithRSAEncryption
+    Signature Value:
+        5c:85:03:0e:2d:ba:01:e4:3d:b6:e0:68:af:21:d6:7f:64:97:
+        94:42:32:36:d8:7f:dd:2d:a3:dc:a4:4d:a7:db:30:96:55:42:
+        9d:b3:04:69:68:2c:c0:2b:96:34:00:65:28:84:ca:90:11:7e:
+        b0:50:97:3d:8c:a2:b1:ff:f3:6f:d1:c3:b5:54:92:1e:0b:35:
+        a2:c2:9a:6a:05:36:4d:7a:8a:cb:12:66:d7:67:31:a9:2d:9e:
+        26:ab:47:fb:99:23:ad:a0:d2:6f:70:86:21:c5:90:98:25:0a:
+        ee:db:a4:83:f3:4b:c0:50:ce:6a:b2:ea:46:04:d2:0d:a0:a6:
+        cc:a8:1a:b7:45:13:d5:31:83:ad:5e:86:cc:1f:39:3b:06:b5:
+        4b:72:22:94:c4:03:91:9c:7a:1d:7c:e7:9d:42:5e:5a:81:4d:
+        0b:ae:ca:89:b1:69:b7:60:ed:f6:02:47:ac:91:3d:96:69:d0:
+        8a:7b:02:b9:c9:39:d0:21:68:e2:48:03:75:36:1b:53:38:c8:
+        a5:57:67:fc:7f:07:c1:12:bf:0c:a1:75:35:36:29:fd:4f:bd:
+        40:8b:c3:18:f0:a5:00:bd:33:a7:66:7d:ba:ee:41:74:11:fb:
+        47:37:91:52:f7:fa:b9:36:92:47:19:23:48:ac:f2:ea:d9:2e:
+        95:5f:65:d8
