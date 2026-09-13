@@ -282,10 +282,9 @@ Análisis del flujo de tramas registradas en el archivo `captura_https.pcap` sob
 * **Cierre de Conexión:**
   * `Cliente -> Servidor [FIN, ACK]` (`Flags [F.]`): Finalización limpia y ordenada de la sesión TCP.
 
-# Entrega 4: Resiliencia, seguridad
-#4.1 Verificar firewall y superficie expuesta: sólo deben quedar abiertos los puertos necesarios. Explicar
-cada excepción.
-```
+## Entrega 4: Resiliencia, seguridad
+### 4.1 Verificar firewall y superficie expuesta: sólo deben quedar abiertos los puertos necesarios. Explicar cada excepción.
+```bash
 sudo ufw status verbose
 Status: active
 Logging: on (low)
@@ -306,9 +305,10 @@ Fuera del servidor solo van a estar accesibles:
 * **22/tcp → SSH**: administración remota
 * **80/tcp → HTTP**: redirección o acceso web
 * **443/tcp → HTTPS**: aplicación web segura
+---
 
-#4.2 Auditar cabeceras de seguridad: HSTS 
-```
+## 4.2 Auditar cabeceras de seguridad: HSTS 
+```bash
 PS  $response = Invoke-WebRequest -Uri https://proyecto-web.local/_/ -SkipCertificateCheck
 PS  $response.Headers
 
@@ -335,10 +335,15 @@ X-Content-Type-Options: configurado como nosniff, impide que el navegador intent
 
 Referrer-Policy: definido como no-referrer-when-downgrade, controla la información de referencia enviada al navegar, protegiendo datos sensibles al evitar que se transmitan a sitios inseguros.
 
-#4.3 Ejecutar pruebas funcionales y de error: ruta válida, 404, método no permitido, caída y recuperación
-del backend, reinicio de VM y persistencia.
-#4.3.1 Prueba de ruta válida
-```
+## 4.3 Ejecutar pruebas funcionales y de error: ruta válida, 404, método no permitido, caída y recuperación del backend, reinicio de VM y persistencia.
+### 4.3.1 Prueba de ruta válida
+* -vk → ignora certificado y muestra detalle.
+
+* -o /dev/null → descarta el cuerpo.
+
+* -D - → imprime solo las cabeceras.
+## 4.3.2 Prueba de ruta inválida
+```bash
 curl -vk https://proyecto-web.local/_/#/login -o /dev/null -D -
 * Host proyecto-web.local:443 was resolved.
  GET /_/ HTTP/1.1
@@ -383,14 +388,11 @@ Strict-Transport-Security: max-age=31536000; includeSubDomains
 Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';
 < X-Content-Type-Options: nosniff
 ```
-* -vk → ignora certificado y muestra detalle.
+---
 
-* -o /dev/null → descarta el cuerpo.
+* Retorno de 404
 
-* -D - → imprime solo las cabeceras.
-# 4.3.2 Prueba de ruta inválida
-
-```
+```bash
  curl -vk https://proyecto-web.local/cualquiercosa -o /dev/null -D -
 * Host proyecto-web.local:443 was resolved.
 HTTP/1.1 404 Not Found
@@ -422,9 +424,11 @@ X-Content-Type-Options: nosniff
 < Referrer-Policy: no-referrer-when-downgrade
 Referrer-Policy: no-referrer-when-downgrade
 ```
-* Retorno de 404
-#4.3.3 Método no permitido
-```
+
+---
+
+### 4.3.3 Método no permitido
+```bash
 curl -vk -X PUT https://proyecto-web.local/_/ -o /dev/null -D -
  PUT /_/ HTTP/1.1
 > Host: proyecto-web.local
@@ -469,20 +473,30 @@ X-Content-Type-Options: nosniff
 < Referrer-Policy: no-referrer-when-downgrade
 Referrer-Policy: no-referrer-when-downgrade
 ```
-#4.3.4 Caída y recuperación del sistema
-```
+### 4.3.4 Caída y recuperación del sistema
+* Pantalla de error de nginx luego de detener el servicio
+```bash
 sudo systemctl stop pocketbase
 
 ```
-* Pantalla de error de nginx
+
 <img width="1863" height="649" alt="image" src="https://github.com/user-attachments/assets/f931f70a-6c23-4efe-898c-d0e25b015dd7" />
-```
+
+---
+
+* Inicio nuevamente del servidor
+```bash
 vboxuser@ubuntuserver:~$ pocketbase serve --http=0.0.0.0:8090
 2026/09/13 18:47:15 Server started at http://0.0.0.0:8090
- REST API: http://0.0.0.0:8090/api/
- Admin UI: http://0.0.0.0:8090/_/
+REST API: http://0.0.0.0:8090/api/
+Admin UI: http://0.0.0.0:8090/_/
 ```
+
 <img width="1825" height="823" alt="image" src="https://github.com/user-attachments/assets/a88bd070-37f3-402a-a221-f7b37063bd4e" />
-#4.3.5 Caída y recuperación del backend, reinicio de VM y persistencia
-* Prueba de persistencia luego de volver a iniciar la VM y el servicio
+
+---
+### 4.3.5 Caída y recuperación del backend, reinicio de VM y persistencia
+* Prueba de persistencia luego de reiniciar la VM y el servicio
 <img width="1825" height="825" alt="image" src="https://github.com/user-attachments/assets/f99e3771-ea18-439f-b84b-8d997d89088c" />
+
+---
