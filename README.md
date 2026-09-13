@@ -612,3 +612,17 @@ Esta sección consolida los 12 puntos de evaluación requeridos para la validaci
 * **Archivo de Log:** `logs/f2_sqlite_persistence.txt`
 * **Captura:**
 <img width="1003" height="38" alt="F2-E2_sqlite_persistence" src="https://github.com/user-attachments/assets/d17947fe-b093-47d1-9ecd-7b7721ab28b6" />
+
+---
+
+### F3-E1: Inspección del Certificado TLS
+* **ID:** F3-E1
+* **Título:** Verificación del certificado digital X.509 y extensiones SAN.
+* **Fecha:** 13/09/2026
+* **Origen:** VM Ubuntu (`equipo-vm`).
+* **Comando Ejecutado:** `openssl x509 -in /etc/ssl/proyecto-web/proyecto-web.crt -text -noout | grep -A 2 -E "(Subject:|Subject Alternative Name)"`
+* **Salida Relevante:** `Subject: CN = proyecto-web.local`, `X509v3 Subject Alternative Name: DNS:proyecto-web.local, IP Address:192.168.1.25`.
+* **Explicación y Conclusión:** Demuestra la validez del certificado autofirmado generado para el dominio local y su direccionamiento IP asociado en las extensiones SAN.
+* **Archivo de Log:** `logs/f3_tls_cert.txt`
+* **Captura:**
+<img width="1363" height="148" alt="F3-E1_tls_cert" src="https://github.com/user-attachments/assets/00c6beb4-708a-4966-8eb2-81c8947e5120" />
