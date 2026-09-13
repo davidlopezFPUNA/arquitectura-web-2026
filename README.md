@@ -10,7 +10,7 @@ Proyecto Integrador - Arquitectura Web 2026: Despliegue de PocketBase en Ubuntu 
 **Infraestructura:** VirtualBox (2 vCPU, 2 GB RAM, 20 GB Disk)  
 
 ---
-### Entrega 1. Descubrimiento, selección y linea base
+## Entrega 1. Descubrimiento, selección y linea base
 
 ## 1. Ficha Técnica de la Aplicación
 
