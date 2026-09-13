@@ -598,3 +598,17 @@ Esta sección consolida los 12 puntos de evaluación requeridos para la validaci
 * **Archivo de Log:** `logs/f2_http_proxy.txt`
 * **Captura:**
 <img width="1096" height="350" alt="F2-E1_http_proxy" src="https://github.com/user-attachments/assets/547f4130-6e19-43cf-bf8c-7aa43efde34a" />
+
+---
+
+### F2-E2: Persistencia de Datos en SQLite
+* **ID:** F2-E2
+* **Título:** Confirmación de almacenamiento persistente del servicio PocketBase en disco.
+* **Fecha:** 13/09/2026
+* **Origen:** VM Ubuntu (`equipo-vm`).
+* **Comando Ejecutado:** `sudo systemctl restart pocketbase && ls -lh /home/dlopez/pocketbase/pb_data/data.db`
+* **Salida Relevante:** `-rw-r--r-- 1 dlopez dlopez 108K sep 13 00:30 /home/dlopez/pocketbase/pb_data/data.db`
+* **Explicación y Conclusión:** Verifica que la base de datos SQLite conserva los datos en disco local tras el reinicio del servicio del sistema, garantizando la durabilidad del estado.
+* **Archivo de Log:** `logs/f2_sqlite_persistence.txt`
+* **Captura:**
+<img width="1003" height="38" alt="F2-E2_sqlite_persistence" src="https://github.com/user-attachments/assets/d17947fe-b093-47d1-9ecd-7b7721ab28b6" />
