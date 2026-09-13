@@ -303,9 +303,9 @@ To                         Action      From
 ```
 Fuera del servidor solo van a estar accesibles:
 
-- **22/tcp → SSH**: administración remota
-- **80/tcp → HTTP**: redirección o acceso web
-- **443/tcp → HTTPS**: aplicación web segura
+* **22/tcp → SSH**: administración remota
+* **80/tcp → HTTP**: redirección o acceso web
+* **443/tcp → HTTPS**: aplicación web segura
 
 #4.2 Auditar cabeceras de seguridad: HSTS 
 ```
@@ -383,11 +383,11 @@ Strict-Transport-Security: max-age=31536000; includeSubDomains
 Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';
 < X-Content-Type-Options: nosniff
 ```
--** -vk → ignora certificado y muestra detalle.
+* -vk → ignora certificado y muestra detalle.
 
--** -o /dev/null → descarta el cuerpo.
+* -o /dev/null → descarta el cuerpo.
 
--** -D - → imprime solo las cabeceras.
+* -D - → imprime solo las cabeceras.
 # 4.3.2 Prueba de ruta inválida
 
 ```
@@ -422,4 +422,67 @@ X-Content-Type-Options: nosniff
 < Referrer-Policy: no-referrer-when-downgrade
 Referrer-Policy: no-referrer-when-downgrade
 ```
--** Retorno de 404 
+* Retorno de 404
+#4.3.3 Método no permitido
+```
+curl -vk -X PUT https://proyecto-web.local/_/ -o /dev/null -D -
+ PUT /_/ HTTP/1.1
+> Host: proyecto-web.local
+> User-Agent: curl/8.21.0
+> Accept: */*
+>
+* Request completely sent off
+* schannel: remote party requests renegotiation
+* schannel: renegotiating SSL/TLS connection
+* schannel: SSL/TLS connection renegotiated
+* schannel: remote party requests renegotiation
+* schannel: renegotiating SSL/TLS connection
+* schannel: SSL/TLS connection renegotiated
+< HTTP/1.1 405 Method Not Allowed
+HTTP/1.1 405 Method Not Allowed
+< Server: nginx/1.28.3 (Ubuntu)
+Server: nginx/1.28.3 (Ubuntu)
+< Date: Sun, 13 Sep 2026 18:41:22 GMT
+Date: Sun, 13 Sep 2026 18:41:22 GMT
+< Content-Type: application/json; charset=UTF-8
+Content-Type: application/json; charset=UTF-8
+< Content-Length: 55
+Content-Length: 55
+< Connection: keep-alive
+Connection: keep-alive
+< Allow: OPTIONS, GET
+Allow: OPTIONS, GET
+< Vary: Origin
+Vary: Origin
+< X-Content-Type-Options: nosniff
+X-Content-Type-Options: nosniff
+< X-Frame-Options: SAMEORIGIN
+X-Frame-Options: SAMEORIGIN
+< X-Xss-Protection: 1; mode=block
+X-Xss-Protection: 1; mode=block
+< Strict-Transport-Security: max-age=31536000; includeSubDomains
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+< Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';
+Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';
+< X-Content-Type-Options: nosniff
+X-Content-Type-Options: nosniff
+< Referrer-Policy: no-referrer-when-downgrade
+Referrer-Policy: no-referrer-when-downgrade
+```
+#4.3.4 Caída y recuperación del sistema
+```
+sudo systemctl stop pocketbase
+
+```
+* Pantalla de error de nginx
+<img width="1863" height="649" alt="image" src="https://github.com/user-attachments/assets/f931f70a-6c23-4efe-898c-d0e25b015dd7" />
+```
+vboxuser@ubuntuserver:~$ pocketbase serve --http=0.0.0.0:8090
+2026/09/13 18:47:15 Server started at http://0.0.0.0:8090
+├─ REST API: http://0.0.0.0:8090/api/
+└─ Admin UI: http://0.0.0.0:8090/_/
+```
+<img width="1825" height="823" alt="image" src="https://github.com/user-attachments/assets/a88bd070-37f3-402a-a221-f7b37063bd4e" />
+
+#4.3.5 Caída y recuperación del backend, reinicio de VM y persistencia
+
