@@ -483,6 +483,9 @@ vboxuser@ubuntuserver:~$ pocketbase serve --http=0.0.0.0:8090
 └─ Admin UI: http://0.0.0.0:8090/_/
 ```
 <img width="1825" height="823" alt="image" src="https://github.com/user-attachments/assets/a88bd070-37f3-402a-a221-f7b37063bd4e" />
+* Prueba de persistencia luego de volver a iniciar la VM y el servicio
+<img width="1825" height="825" alt="image" src="https://github.com/user-attachments/assets/f99e3771-ea18-439f-b84b-8d997d89088c" />
+
 
 #4.3.5 Caída y recuperación del backend, reinicio de VM y persistencia
 
