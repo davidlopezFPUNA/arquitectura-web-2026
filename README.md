@@ -654,3 +654,17 @@ Esta sección consolida los 12 puntos de evaluación requeridos para la validaci
 * **Archivo de Log:** `logs/f4_ufw_status.txt`
 * **Captura:**
 <img width="514" height="246" alt="F4-E1_ufw_status" src="https://github.com/user-attachments/assets/732a651e-7b0b-4622-9bbb-331bea88e0ae" />
+
+---
+
+### F4-E2: Prueba de Bloqueo de Puerto Directo (PocketBase)
+* **ID:** F4-E2
+* **Título:** Verificación de restricción de acceso externo al puerto de backend (8090).
+* **Fecha:** 13/09/2026
+* **Origen:** Host Cliente (Windows / PowerShell).
+* **Comando Ejecutado:** `curl.exe --connect-timeout 5 http://192.168.1.25:8090/`
+* **Salida Relevante:** `curl: (28) Connection timed out after 5001 milliseconds`.
+* **Explicación y Conclusión:** Confirma que el acceso directo al puerto 8090 desde clientes externos está bloqueado, garantizando que todo el tráfico sea procesado exclusivamente a través del Proxy Inverso Nginx.
+* **Archivo de Log:** `logs/f4_port_block.txt`
+* **Captura:**
+<img width="759" height="40" alt="F4-E2_ufw_port_block" src="https://github.com/user-attachments/assets/63ee3a09-c4a4-4d3f-917c-fa2de3365323" />
