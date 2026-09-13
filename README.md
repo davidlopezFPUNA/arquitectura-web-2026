@@ -282,7 +282,33 @@ Análisis del flujo de tramas registradas en el archivo `captura_https.pcap` sob
 * **Cierre de Conexión:**
   * `Cliente -> Servidor [FIN, ACK]` (`Flags [F.]`): Finalización limpia y ordenada de la sesión TCP.
 
-# Entrega 4: Resiliencia, seguridad, cierre y defensa 
+# Entrega 4: Resiliencia, seguridad
+#1 Verificar firewall y superficie expuesta: sólo deben quedar abiertos los puertos necesarios. Explicar
+cada excepción.
+```
+sudo ufw status verbose
+Status: active
+Logging: on (low)
+Default: deny (incoming), allow (outgoing), disabled (routed)
+New profiles: skip
+
+To                         Action      From
+--                         ------      ----
+22/tcp                     ALLOW IN    Anywhere
+80/tcp                     ALLOW IN    Anywhere
+443/tcp                    ALLOW IN    Anywhere
+22/tcp (v6)                ALLOW IN    Anywhere (v6)
+80/tcp (v6)                ALLOW IN    Anywhere (v6)
+443/tcp (v6)               ALLOW IN    Anywhere (v6)
+```
+Fuera del servidor solo van a estar accesibles:
+
+22/tcp → SSH (administración remota).
+
+80/tcp → HTTP (redirección o acceso web).
+
+443/tcp → HTTPS (aplicación web segura).
+
 #2 Auditar cabeceras de seguridad: HSTS 
 ```
 PS  $response = Invoke-WebRequest -Uri https://proyecto-web.local/_/ -SkipCertificateCheck
