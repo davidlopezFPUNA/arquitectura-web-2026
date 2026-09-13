@@ -502,3 +502,61 @@ Admin UI: http://0.0.0.0:8090/_/
 <img width="1825" height="825" alt="image" src="https://github.com/user-attachments/assets/f99e3771-ea18-439f-b84b-8d997d89088c" />
 
 ---
+### 4.4 Realizar una prueba de concurrencia moderada y no destructiva con ab, hey o herramienta equivalente; informar tasa, latencia, errores y límites de la prueba.
+```bash
+& "$env:USERPROFILE\Downloads\hey.exe" -n 500 -c 20 https://proyecto-web.local/api/health
+
+Summary:
+  Total:        0.1114 secs
+  Slowest:      0.0296 secs
+  Fastest:      0.0003 secs
+  Average:      0.0040 secs
+  Requests/sec: 4489.4386
+
+  Total data:   33500 bytes
+  Size/request: 67 bytes
+
+Response time histogram:
+  0.000 [1]     |
+  0.003 [335]   |■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■
+  0.006 [79]    |■■■■■■■■■
+  0.009 [62]    |■■■■■■■
+  0.012 [2]     |
+  0.015 [1]     |
+  0.018 [0]     |
+  0.021 [1]     |
+  0.024 [3]     |
+  0.027 [3]     |
+  0.030 [13]    |■■
+
+
+Latency distribution:
+  10%% in 0.0010 secs
+  25%% in 0.0019 secs
+  50%% in 0.0025 secs
+  75%% in 0.0036 secs
+  90%% in 0.0075 secs
+  95%% in 0.0090 secs
+  99%% in 0.0287 secs
+
+Details (average, fastest, slowest):
+  DNS+dialup:   0.0005 secs, 0.0000 secs, 0.0203 secs
+  DNS-lookup:   0.0003 secs, 0.0000 secs, 0.0068 secs
+  req write:    0.0000 secs, 0.0000 secs, 0.0002 secs
+  resp wait:    0.0034 secs, 0.0003 secs, 0.0182 secs
+  resp read:    0.0000 secs, 0.0000 secs, 0.0005 secs
+
+Status code distribution:
+  [200] 500 responses
+
+```
+
+---
+
+### 4.5  Observar CPU, memoria, disco, procesos y logs durante la prueba.
+* Durante la prueba del punto anterior, con concurrencia de 20 y 500 peticiones, ha habido una subida visible del consumo de registros, del 0.1% a casi 7% en CPU y menor impacto en la memoria, debido que la petición solo hace un get al health del api. También se observan los servicios que han aumentado el consumo: pocketbase.
+
+<img width="952" height="815" alt="image" src="https://github.com/user-attachments/assets/3c79408c-f85c-4221-9f49-a21801d645fa" />
+
+---
+
