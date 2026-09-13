@@ -1,0 +1,186 @@
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Cargar los perfiles personales y de sistema tardó 927ms.
+(base) PS C:\Users\Jr. Legal> ssh -p 2222 vbosuser@localhost
+kex_exchange_identification: read: Connection aborted
+banner exchange: Connection to 127.0.0.1 port 2222: Connection aborted
+(base) PS C:\Users\Jr. Legal> ssh -p 2222 vbosuser@localhost
+kex_exchange_identification: read: Connection aborted
+banner exchange: Connection to 127.0.0.1 port 2222: Connection aborted
+(base) PS C:\Users\Jr. Legal> ssh -p 2222 vbosuser@localhost
+The authenticity of host '[localhost]:2222 ([127.0.0.1]:2222)' can't be established.
+ED25519 key fingerprint is SHA256:3obLYyxhvXAHMr28pQMI5qP/aodfTGNJsMAz66h0ZIU.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added '[localhost]:2222' (ED25519) to the list of known hosts.
+vbosuser@localhost's password:
+Permission denied, please try again.
+vbosuser@localhost's password:
+(base) PS C:\Users\Jr. Legal> ssh -p 2222 vboxsuser@localhost
+vboxsuser@localhost's password:
+(base) PS C:\Users\Jr. Legal> ssh -p 2222 vboxuser@localhost
+vboxuser@localhost's password:
+Welcome to Ubuntu 26.04.1 LTS (GNU/Linux 7.0.0-31-generic x86_64)
+
+ * Documentation:  https://docs.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+ System information as of Sat Sep 12 11:54:13 PM UTC 2026
+
+  System load:             0.11
+  Usage of /:              13.0% of 29.36GB
+  Memory usage:            8%
+  Swap usage:              0%
+  Processes:               122
+  Users logged in:         0
+  IPv4 address for enp0s3: 10.0.2.15
+  IPv6 address for enp0s3: fd17:625c:f037:2:a00:27ff:fe0d:5462
+
+
+Expanded Security Maintenance for Applications is not enabled.
+
+7 updates can be applied immediately.
+To see these additional updates run: apt list --upgradable
+
+Enable ESM Apps to receive additional future security updates.
+See https://ubuntu.com/esm or run: sudo pro status
+
+
+vboxuser@ubuntuserver:~$ curl -L https://github.com/pocketbase/pocketbase/releases/download/v0.22.21/pocketbase_0.22.21_linux_amd64.zip -o pocketbase.zip
+sudo apt update && sudo apt install unzip -y
+unzip pocketbase.zip -d pocketbase_app
+sudo mv pocketbase_app/pocketbase /usr/local/bin/
+rm -rf pocketbase.zip pocketbase_app
+mkdir -p ~/pocketbase
+  % Total    % Received % Xferd  Average Speed  Time    Time    Time   Current
+                                 Dload  Upload  Total   Spent   Left   Speed
+  0      0   0      0   0      0      0      0                              0
+100 13.78M 100 13.78M   0      0 13.84M      0                              0
+[sudo: authenticate] Password:
+Hit:1 http://archive.ubuntu.com/ubuntu resolute InRelease
+Hit:2 http://security.ubuntu.com/ubuntu resolute-security InRelease
+Hit:3 http://archive.ubuntu.com/ubuntu resolute-updates InRelease
+Hit:4 http://archive.ubuntu.com/ubuntu resolute-backports InRelease
+8 packages can be upgraded. Run 'apt list --upgradable' to see them.
+The following packages were automatically installed and are no longer required:
+  linux-headers-7.0.0-30                 linux-main-modules-zfs-7.0.0-30-generic  linux-tools-7.0.0-30-generic
+  linux-headers-7.0.0-30-generic         linux-modules-7.0.0-30-generic
+  linux-image-unsigned-7.0.0-30-generic  linux-tools-7.0.0-30
+Use 'sudo apt autoremove' to remove them.
+
+Installing:
+  unzip
+
+Suggested packages:
+  zip
+
+Summary:
+  Upgrading: 0, Installing: 1, Removing: 0, Not Upgrading: 8
+  Download size: 180 kB
+  Space needed: 426 kB / 25.8 GB available
+
+Get:1 http://archive.ubuntu.com/ubuntu resolute/main amd64 unzip amd64 6.0-29ubuntu1 [180 kB]
+Fetched 180 kB in 2s (112 kB/s)
+Selecting previously unselected package unzip.
+(Reading database… 141564 files and directories currently installed.)
+Preparing to unpack …/unzip_6.0-29ubuntu1_amd64.deb…
+Unpacking unzip (6.0-29ubuntu1)…
+Setting up unzip (6.0-29ubuntu1)…
+Processing triggers for man-db (2.13.1-1build1)…
+Scanning processes...
+Scanning linux images...
+
+Running kernel seems to be up-to-date.
+
+No services need to be restarted.
+
+No containers need to be restarted.
+
+No user sessions are running outdated binaries.
+
+No VM guests are running outdated hypervisor (qemu) binaries on this host.
+Archive:  pocketbase.zip
+  inflating: pocketbase_app/CHANGELOG.md
+  inflating: pocketbase_app/LICENSE.md
+  inflating: pocketbase_app/pocketbase
+vboxuser@ubuntuserver:~$ pocketbase serve
+2026/09/12 23:58:06 Server started at http://127.0.0.1:8090
+├─ REST API: http://127.0.0.1:8090/api/
+└─ Admin UI: http://127.0.0.1:8090/_/
+^Cvboxuser@ubuntuserver:~$ exit
+logout
+Connection to localhost closed.
+(base) PS C:\Users\Jr. Legal> ^C
+(base) PS C:\Users\Jr. Legal> ssh -p 2222 vboxuser@localhost
+vboxuser@localhost's password:
+Welcome to Ubuntu 26.04.1 LTS (GNU/Linux 7.0.0-31-generic x86_64)
+
+ * Documentation:  https://docs.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+ System information as of Sun Sep 13 12:04:55 AM UTC 2026
+
+  System load:             0.5
+  Usage of /:              13.1% of 29.36GB
+  Memory usage:            7%
+  Swap usage:              0%
+  Processes:               120
+  Users logged in:         0
+  IPv4 address for enp0s3: 10.0.2.15
+  IPv6 address for enp0s3: fd17:625c:f037:2:a00:27ff:fe0d:5462
+
+
+Expanded Security Maintenance for Applications is not enabled.
+
+7 updates can be applied immediately.
+To see these additional updates run: apt list --upgradable
+
+Enable ESM Apps to receive additional future security updates.
+See https://ubuntu.com/esm or run: sudo pro status
+
+
+Last login: Sat Sep 12 23:54:14 2026 from 10.0.2.2
+vboxuser@ubuntuserver:~$ pocketbase serve
+2026/09/13 00:05:12 Server started at http://127.0.0.1:8090
+├─ REST API: http://127.0.0.1:8090/api/
+└─ Admin UI: http://127.0.0.1:8090/_/
+sudo ufw status
+^Cvboxuser@ubuntuserver:~$ sudo ufw status
+[sudo: authenticate] Password:
+Status: inactive
+vboxuser@ubuntuserver:~$ pocketbase serve
+2026/09/13 00:09:11 Server started at http://127.0.0.1:8090
+├─ REST API: http://127.0.0.1:8090/api/
+└─ Admin UI: http://127.0.0.1:8090/_/
+^Cvboxuser@ubuntuserver:~pocketbase serve --http=0.0.0.0:809090
+2026/09/13 00:11:00 Server started at http://0.0.0.0:8090
+├─ REST API: http://0.0.0.0:8090/api/
+└─ Admin UI: http://0.0.0.0:8090/_/
+^Cvboxuser@ubuntuserver:~Get-History | Export-Clixml -Path historial.xmlml
+Export-Clixml: command not found
+Get-History: command not found
+vboxuser@ubuntuserver:~$ Get-History | Export-Clixml -Path historial.xml
+Get-History | Export-Clixml -Path historial.xml
+Get-History | Export-Clixml -Path historial.xml
+Get-History | Export-Clixml -Path historial.xml
+Get-History | Export-Clixml -Path historial.xml
+Get-History | Export-Clixml -Path historial.xml
+Get-History | Export-Clixml -Path historial.xml
+Get-History: command not found
+Export-Clixml: command not found
+Export-Clixml: command not found
+Get-History: command not found
+Get-History: command not found
+Export-Clixml: command not found
+Export-Clixml: command not found
+Get-History: command not found
+Get-History: command not found
+Export-Clixml: command not found
+Get-History: command not found
+Export-Clixml: command not found
+Get-History: command not found
+Export-Clixml: command not found
+vboxuser@ubuntuserver:~$
