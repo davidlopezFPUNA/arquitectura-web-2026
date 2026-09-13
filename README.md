@@ -569,4 +569,21 @@ Esta sección consolida los 12 puntos de evaluación requeridos para la validaci
 * **Explicación y Conclusión:** Confirma que la VM está acoplada a la LAN en modo Adaptador Puente con direccionamiento válido dentro del segmento /27.
 * **Archivo de Log:** `logs/f1_network_baseline.txt`
 * **Captura:**
-* <img width="986" height="622" alt="F1-E1_red_baseline" src="https://github.com/user-attachments/assets/a3e47013-915b-439b-aa62-af8447afa4fa" />
+<img width="986" height="622" alt="F1-E1_red_baseline" src="https://github.com/user-attachments/assets/a3e47013-915b-439b-aa62-af8447afa4fa" />
+
+---
+
+### F1-E2: Puertos en Escucha Iniciales
+* **ID:** F1-E2
+* **Título:** Inspección de sockets y procesos escuchando en la pila TCP.
+* **Fecha:** 13/09/2026
+* **Origen:** VM Ubuntu (`equipo-vm`).
+* **Comando Ejecutado:** `sudo ss -lntup`
+* **Salida Relevante:** `tcp LISTEN 0 511 0.0.0.0:80 ("nginx")`, `tcp LISTEN 0 4096 127.0.0.1:8090 ("pocketbase")`, `tcp LISTEN 0 128 0.0.0.0:22 ("sshd")`.
+* **Explicación y Conclusión:** Demuestra que PocketBase está aislado en la interfaz local (`127.0.0.1`), mientras Nginx y SSH están expuestos públicamente.
+* **Archivo de Log:** `logs/f1_ports_baseline.txt`
+* **Captura:**
+<img width="1437" height="335" alt="F1-E2_ss_ports" src="https://github.com/user-attachments/assets/4e9a39fa-c215-4711-a13b-b95aaad88ca5" />
+
+
+
