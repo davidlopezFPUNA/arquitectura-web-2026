@@ -557,3 +557,16 @@ Esta sección consolida los 12 puntos de evaluación requeridos para la validaci
 | **P11** | **Resiliencia** | `systemctl stop/start` (502 Bad Gateway $\rightarrow$ 200 OK); `sudo reboot` con persistencia `systemd`. | Falla observable, manejo controlado y recuperación autónoma post-boot. | **Aprobado** |
 | **P12** | **Recursos** | Benchmarking `ab -n 100 -c 10` ($199.18\text{ req/s}$); RAM al $16.6\%$ (Pico PB: $37.1\text{ MiB}$), Disco al $50\%$. | Mediciones de CPU/RAM/Disco correlacionadas con la prueba de carga. | **Aprobado** |
 
+---
+
+### F1-E1: Identificación del Sistema y Red Baseline
+* **ID:** F1-E1
+* **Título:** Verificación de hostname, interfaz de red IPv4 y enrutamiento.
+* **Fecha:** 13/09/2026
+* **Origen:** VM Ubuntu (`equipo-vm`) vía SSH.
+* **Comando Ejecutado:** `hostnamectl && ip a && ip route`
+* **Salida Relevante:** Static hostname `equipo-vm`, IP `192.168.1.25/27` en interfaz `enp0s3`, gateway `192.168.1.1`.
+* **Explicación y Conclusión:** Confirma que la VM está acoplada a la LAN en modo Adaptador Puente con direccionamiento válido dentro del segmento /27.
+* **Archivo de Log:** `logs/f1_network_baseline.txt`
+* **Captura:**
+* <img width="986" height="622" alt="F1-E1_red_baseline" src="https://github.com/user-attachments/assets/a3e47013-915b-439b-aa62-af8447afa4fa" />
