@@ -307,7 +307,7 @@ Fuera del servidor solo van a estar accesibles:
 * **443/tcp → HTTPS**: aplicación web segura
 ---
 
-## 4.2 Auditar cabeceras de seguridad: HSTS 
+### 4.2 Auditar cabeceras de seguridad: HSTS 
 ```bash
 PS  $response = Invoke-WebRequest -Uri https://proyecto-web.local/_/ -SkipCertificateCheck
 PS  $response.Headers
@@ -335,14 +335,14 @@ X-Content-Type-Options: configurado como nosniff, impide que el navegador intent
 
 Referrer-Policy: definido como no-referrer-when-downgrade, controla la información de referencia enviada al navegar, protegiendo datos sensibles al evitar que se transmitan a sitios inseguros.
 
-## 4.3 Ejecutar pruebas funcionales y de error: ruta válida, 404, método no permitido, caída y recuperación del backend, reinicio de VM y persistencia.
-### 4.3.1 Prueba de ruta válida
+### 4.3 Ejecutar pruebas funcionales y de error: ruta válida, 404, método no permitido, caída y recuperación del backend, reinicio de VM y persistencia.
+#### 4.3.1 Prueba de ruta válida
 * -vk → ignora certificado y muestra detalle.
 
 * -o /dev/null → descarta el cuerpo.
 
 * -D - → imprime solo las cabeceras.
-## 4.3.2 Prueba de ruta inválida
+
 ```bash
 curl -vk https://proyecto-web.local/_/#/login -o /dev/null -D -
 * Host proyecto-web.local:443 was resolved.
@@ -390,6 +390,8 @@ Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; 
 ```
 ---
 
+#### 4.3.2 Prueba de ruta inválida
+
 * Retorno de 404
 
 ```bash
@@ -427,7 +429,7 @@ Referrer-Policy: no-referrer-when-downgrade
 
 ---
 
-### 4.3.3 Método no permitido
+#### 4.3.3 Método no permitido
 ```bash
 curl -vk -X PUT https://proyecto-web.local/_/ -o /dev/null -D -
  PUT /_/ HTTP/1.1
@@ -473,7 +475,7 @@ X-Content-Type-Options: nosniff
 < Referrer-Policy: no-referrer-when-downgrade
 Referrer-Policy: no-referrer-when-downgrade
 ```
-### 4.3.4 Caída y recuperación del sistema
+#### 4.3.4 Caída y recuperación del sistema
 * Pantalla de error de nginx luego de detener el servicio
 ```bash
 sudo systemctl stop pocketbase
@@ -495,7 +497,7 @@ Admin UI: http://0.0.0.0:8090/_/
 <img width="1825" height="823" alt="image" src="https://github.com/user-attachments/assets/a88bd070-37f3-402a-a221-f7b37063bd4e" />
 
 ---
-### 4.3.5 Caída y recuperación del backend, reinicio de VM y persistencia
+#### 4.3.5 Caída y recuperación del backend, reinicio de VM y persistencia
 * Prueba de persistencia luego de reiniciar la VM y el servicio
 <img width="1825" height="825" alt="image" src="https://github.com/user-attachments/assets/f99e3771-ea18-439f-b84b-8d997d89088c" />
 
