@@ -1,0 +1,504 @@
+(base) PS C:\Users\Jr. Legal> ssh -p 2222 vboxuser@localhost
+vboxuser@localhost's password:
+Welcome to Ubuntu 26.04.1 LTS (GNU/Linux 7.0.0-31-generic x86_64)
+
+ * Documentation:  https://docs.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+ System information as of Sun Sep 13 12:51:39 AM UTC 2026
+
+  System load:             0.0
+  Usage of /:              13.2% of 29.36GB
+  Memory usage:            8%
+  Swap usage:              0%
+  Processes:               118
+  Users logged in:         0
+  IPv4 address for enp0s3: 10.0.2.15
+  IPv6 address for enp0s3: fd17:625c:f037:2:a00:27ff:fe0d:5462
+
+
+Expanded Security Maintenance for Applications is not enabled.
+
+7 updates can be applied immediately.
+To see these additional updates run: apt list --upgradable
+
+Enable ESM Apps to receive additional future security updates.
+See https://ubuntu.com/esm or run: sudo pro status
+
+
+Last login: Sun Sep 13 00:04:55 2026 from 10.0.2.2
+vboxuser@ubuntuserver:~$ sudo apt update
+sudo apt install nginx -y
+[sudo: authenticate] Password:
+Hit:1 http://archive.ubuntu.com/ubuntu resolute InRelease
+Hit:2 http://archive.ubuntu.com/ubuntu resolute-updates InRelease
+Hit:3 http://security.ubuntu.com/ubuntu resolute-security InRelease
+Get:4 http://archive.ubuntu.com/ubuntu resolute-backports InRelease [137 kB]
+Fetched 137 kB in 2s (67.3 kB/s)
+8 packages can be upgraded. Run 'apt list --upgradable' to see them.
+The following packages were automatically installed and are no longer required:
+  linux-headers-7.0.0-30                 linux-main-modules-zfs-7.0.0-30-generic  linux-tools-7.0.0-30-generic
+  linux-headers-7.0.0-30-generic         linux-modules-7.0.0-30-generic
+  linux-image-unsigned-7.0.0-30-generic  linux-tools-7.0.0-30
+Use 'sudo apt autoremove' to remove them.
+
+Installing:
+  nginx
+
+Installing dependencies:
+  nginx-common
+
+Suggested packages:
+  fcgiwrap  nginx-doc  ssl-cert
+
+Summary:
+  Upgrading: 0, Installing: 2, Removing: 0, Not Upgrading: 8
+  Download size: 655 kB
+  Space needed: 1,860 kB / 25.7 GB available
+
+Get:1 http://archive.ubuntu.com/ubuntu resolute-updates/main amd64 nginx-common all 1.28.3-2ubuntu1.10 [37.8 kB]
+Get:2 http://archive.ubuntu.com/ubuntu resolute-updates/main amd64 nginx amd64 1.28.3-2ubuntu1.10 [617 kB]
+Fetched 655 kB in 2s (264 kB/s)
+Preconfiguring packages ...
+Selecting previously unselected package nginx-common.
+(Reading database… 141582 files and directories currently installed.)
+Preparing to unpack …/nginx-common_1.28.3-2ubuntu1.10_all.deb…
+Unpacking nginx-common (1.28.3-2ubuntu1.10)…
+Selecting previously unselected package nginx.
+Preparing to unpack …/nginx_1.28.3-2ubuntu1.10_amd64.deb…
+Unpacking nginx (1.28.3-2ubuntu1.10)…
+Setting up nginx-common (1.28.3-2ubuntu1.10)…
+Created symlink '/etc/systemd/system/multi-user.target.wants/nginx.service' → '/usr/lib/systemd/system/nginx.service'.
+Setting up nginx (1.28.3-2ubuntu1.10)…
+ * Upgrading binary nginx                                                                                        [ OK ]
+Processing triggers for man-db (2.13.1-1build1)…
+Processing triggers for ufw (0.36.2-9build1)…
+Scanning processes...
+Scanning linux images...
+
+Running kernel seems to be up-to-date.
+
+No services need to be restarted.
+
+No containers need to be restarted.
+
+No user sessions are running outdated binaries.
+
+No VM guests are running outdated hypervisor (qemu) binaries on this host.
+vboxuser@ubuntuserver:~$ systemctl status nginx
+● nginx.service - A high performance web server and a reverse proxy server
+     Loaded: loaded (/usr/lib/systemd/system/nginx.service; enabled; preset: enabled)
+     Active: active (running) since Sun 2026-09-13 00:54:48 UTC; 12s ago
+ Invocation: c016ea857f7d43f0b0c1e0c7fa5b160e
+       Docs: man:nginx(8)
+    Process: 2313 ExecStartPre=/usr/sbin/nginx -t -q -g daemon on; master_process on; (code=exited, status=0/SUCCESS)
+    Process: 2315 ExecStart=/usr/sbin/nginx -g daemon on; master_process on; (code=exited, status=0/SUCCESS)
+   Main PID: 2344 (nginx)
+      Tasks: 3 (limit: 1615)
+     Memory: 3M (peak: 7.3M)
+        CPU: 25ms
+     CGroup: /system.slice/nginx.service
+             ├─2344 "nginx: master process /usr/sbin/nginx -g daemon on; master_process on;"
+             ├─2347 "nginx: worker process"
+             └─2348 "nginx: worker process"
+
+Sep 13 00:54:48 ubuntuserver systemd[1]: Starting nginx.service - A high performance web server and a reverse proxy ser>
+Sep 13 00:54:48 ubuntuserver systemd[1]: Started nginx.service - A high performance web server and a reverse proxy serv>
+
+vboxuser@ubuntuserver:~$ sudo apt install certbot python3-certbot-nginx -y
+The following packages were automatically installed and are no longer required:
+  linux-headers-7.0.0-30                 linux-main-modules-zfs-7.0.0-30-generic  linux-tools-7.0.0-30-generic
+  linux-headers-7.0.0-30-generic         linux-modules-7.0.0-30-generic
+  linux-image-unsigned-7.0.0-30-generic  linux-tools-7.0.0-30
+Use 'sudo apt autoremove' to remove them.
+
+Installing:
+  certbot  python3-certbot-nginx
+
+Installing dependencies:
+  python3-acme     python3-configargparse  python3-josepy         python3-pytz
+  python3-certbot  python3-icu             python3-parsedatetime  python3-rfc3339
+
+Suggested packages:
+  python-certbot-doc  python3-certbot-apache  python-acme-doc  python-certbot-nginx-doc
+
+Summary:
+  Upgrading: 0, Installing: 10, Removing: 0, Not Upgrading: 8
+  Download size: 1,248 kB
+  Space needed: 6,391 kB / 25.7 GB available
+
+Get:1 http://archive.ubuntu.com/ubuntu resolute/universe amd64 python3-josepy all 2.2.0-1 [22.3 kB]
+Get:2 http://archive.ubuntu.com/ubuntu resolute/universe amd64 python3-pytz all 2025.2-5 [32.4 kB]
+Get:3 http://archive.ubuntu.com/ubuntu resolute/universe amd64 python3-rfc3339 all 2.0.1-2 [6,530 B]
+Get:4 http://archive.ubuntu.com/ubuntu resolute/universe amd64 python3-acme all 4.0.0-2 [49.3 kB]
+Get:5 http://archive.ubuntu.com/ubuntu resolute/main amd64 python3-configargparse all 1.7-2 [31.7 kB]
+Get:6 http://archive.ubuntu.com/ubuntu resolute/universe amd64 python3-parsedatetime all 2.6-3build1 [32.1 kB]
+Get:7 http://archive.ubuntu.com/ubuntu resolute/universe amd64 python3-certbot all 4.0.0-4 [267 kB]
+Get:8 http://archive.ubuntu.com/ubuntu resolute/universe amd64 certbot all 4.0.0-4 [91.5 kB]
+Get:9 http://archive.ubuntu.com/ubuntu resolute/universe amd64 python3-certbot-nginx all 4.0.0-3 [67.7 kB]
+Get:10 http://archive.ubuntu.com/ubuntu resolute/main amd64 python3-icu amd64 2.16.1-1build1 [647 kB]
+Fetched 1,248 kB in 3s (422 kB/s)
+Preconfiguring packages ...
+Selecting previously unselected package python3-josepy.
+(Reading database… 141630 files and directories currently installed.)
+Preparing to unpack …/0-python3-josepy_2.2.0-1_all.deb…
+Unpacking python3-josepy (2.2.0-1)…
+Selecting previously unselected package python3-pytz.
+Preparing to unpack …/1-python3-pytz_2025.2-5_all.deb…
+Unpacking python3-pytz (2025.2-5)…
+Selecting previously unselected package python3-rfc3339.
+Preparing to unpack …/2-python3-rfc3339_2.0.1-2_all.deb…
+Unpacking python3-rfc3339 (2.0.1-2)…
+Selecting previously unselected package python3-acme.
+Preparing to unpack …/3-python3-acme_4.0.0-2_all.deb…
+Unpacking python3-acme (4.0.0-2)…
+Selecting previously unselected package python3-configargparse.
+Preparing to unpack …/4-python3-configargparse_1.7-2_all.deb…
+Unpacking python3-configargparse (1.7-2)…
+Selecting previously unselected package python3-parsedatetime.
+Preparing to unpack …/5-python3-parsedatetime_2.6-3build1_all.deb…
+Unpacking python3-parsedatetime (2.6-3build1)…
+Selecting previously unselected package python3-certbot.
+Preparing to unpack …/6-python3-certbot_4.0.0-4_all.deb…
+Unpacking python3-certbot (4.0.0-4)…
+Selecting previously unselected package certbot.
+Preparing to unpack …/7-certbot_4.0.0-4_all.deb…
+Unpacking certbot (4.0.0-4)…
+Selecting previously unselected package python3-certbot-nginx.
+Preparing to unpack …/8-python3-certbot-nginx_4.0.0-3_all.deb…
+Unpacking python3-certbot-nginx (4.0.0-3)…
+Selecting previously unselected package python3-icu.
+Preparing to unpack …/9-python3-icu_2.16.1-1build1_amd64.deb…
+Unpacking python3-icu (2.16.1-1build1)…
+Setting up python3-configargparse (1.7-2)…
+Setting up python3-parsedatetime (2.6-3build1)…
+Setting up python3-icu (2.16.1-1build1)…
+Setting up python3-pytz (2025.2-5)…
+Setting up python3-josepy (2.2.0-1)…
+Setting up python3-rfc3339 (2.0.1-2)…
+Setting up python3-acme (4.0.0-2)…
+Setting up python3-certbot (4.0.0-4)…
+Setting up certbot (4.0.0-4)…
+Created symlink '/etc/systemd/system/timers.target.wants/certbot.timer' → '/usr/lib/systemd/system/certbot.timer'.
+Setting up python3-certbot-nginx (4.0.0-3)…
+Processing triggers for man-db (2.13.1-1build1)…
+Scanning processes...
+Scanning linux images...
+
+Running kernel seems to be up-to-date.
+
+No services need to be restarted.
+
+No containers need to be restarted.
+
+No user sessions are running outdated binaries.
+
+No VM guests are running outdated hypervisor (qemu) binaries on this host.
+vboxuser@ubuntuserver:~$ sudo nano /etc/nginx/sites-available/pocketbase
+vboxuser@ubuntuserver:~$ sudo ln -s /etc/nginx/sites-available/pocketbase /etc/nginx/sites-enabled/
+vboxuser@ubuntuserver:~$ sudo nginx -t
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+vboxuser@ubuntuserver:~$ sudo systemctl reload nginx
+vboxuser@ubuntuserver:~$ server_name proyecto-web.com www.proyecto-web.com;
+server_name: command not found
+vboxuser@ubuntuserver:~$ sudo nano /etc/nginx/sites-available/pocketbase
+vboxuser@ubuntuserver:~$ sudo ln -s /etc/nginx/sites-available/pocketbase /etc/nginx/sites-enabled/
+ln: Already exists
+vboxuser@ubuntuserver:~$ sudo nginx -t
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+vboxuser@ubuntuserver:~$ sudo systemctl reload nginx
+vboxuser@ubuntuserver:~$ sudo apt install certbot python3-certbot-nginx -y
+certbot is already the newest version (4.0.0-4).
+python3-certbot-nginx is already the newest version (4.0.0-3).
+The following packages were automatically installed and are no longer required:
+  linux-headers-7.0.0-30                 linux-main-modules-zfs-7.0.0-30-generic  linux-tools-7.0.0-30-generic
+  linux-headers-7.0.0-30-generic         linux-modules-7.0.0-30-generic
+  linux-image-unsigned-7.0.0-30-generic  linux-tools-7.0.0-30
+Use 'sudo apt autoremove' to remove them.
+
+Summary:
+  Upgrading: 0, Installing: 0, Removing: 0, Not Upgrading: 8
+vboxuser@ubuntuserver:~$ sudo certbot --nginx -d proyecto-web.com -d www.proyecto-web.com
+Saving debug log to /var/log/letsencrypt/letsencrypt.log
+Enter email address or hit Enter to skip.
+ (Enter 'c' to cancel): ^CExiting due to user request.
+vboxuser@ubuntuserver:~$ sudo nano /etc/nginx/sites-available/pocketbase
+vboxuser@ubuntuserver:~$ sudo ln -s /etc/nginx/sites-available/pocketbase /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx
+ln: Already exists
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+vboxuser@ubuntuserver:~$ systemctl status nginx
+● nginx.service - A high performance web server and a reverse proxy server
+     Loaded: loaded (/usr/lib/systemd/system/nginx.service; enabled; preset: enabled)
+     Active: active (running) since Sun 2026-09-13 00:54:48 UTC; 19min ago
+ Invocation: c016ea857f7d43f0b0c1e0c7fa5b160e
+       Docs: man:nginx(8)
+    Process: 3025 ExecReload=/usr/sbin/nginx -g daemon on; master_process on; -s reload (code=exited, status=0/SUCCESS)
+   Main PID: 2344 (nginx)
+      Tasks: 3 (limit: 1615)
+     Memory: 3.2M (peak: 7.3M)
+        CPU: 73ms
+     CGroup: /system.slice/nginx.service
+             ├─2344 "nginx: master process /usr/sbin/nginx -g daemon on; master_process on;"
+             ├─3026 "nginx: worker process"
+             └─3028 "nginx: worker process"
+
+Sep 13 00:54:48 ubuntuserver systemd[1]: Started nginx.service - A high performance web server and a reverse proxy serv>
+Sep 13 00:57:24 ubuntuserver systemd[1]: Reloading nginx.service - A high performance web server and a reverse proxy se>
+Sep 13 00:57:24 ubuntuserver nginx[2826]: 2026/09/13 00:57:24 [notice] 2826#2826: signal process started
+Sep 13 00:57:24 ubuntuserver systemd[1]: Reloaded nginx.service - A high performance web server and a reverse proxy ser>
+Sep 13 01:04:51 ubuntuserver systemd[1]: Reloading nginx.service - A high performance web server and a reverse proxy se>
+Sep 13 01:04:51 ubuntuserver nginx[2912]: 2026/09/13 01:04:51 [notice] 2912#2912: signal process started
+Sep 13 01:04:51 ubuntuserver systemd[1]: Reloaded nginx.service - A high performance web server and a reverse proxy ser>
+Sep 13 01:10:36 ubuntuserver systemd[1]: Reloading nginx.service - A high performance web server and a reverse proxy se>
+Sep 13 01:10:36 ubuntuserver nginx[3025]: 2026/09/13 01:10:36 [notice] 3025#3025: signal process started
+Sep 13 01:10:36 ubuntuserver systemd[1]: Reloaded nginx.service - A high performance web server and a reverse proxy ser>
+lines 1-25/25 (END)...skipping...
+● nginx.service - A high performance web server and a reverse proxy server
+     Loaded: loaded (/usr/lib/systemd/system/nginx.service; enabled; preset: enabled)
+     Active: active (running) since Sun 2026-09-13 00:54:48 UTC; 19min ago
+ Invocation: c016ea857f7d43f0b0c1e0c7fa5b160e
+       Docs: man:nginx(8)
+    Process: 3025 ExecReload=/usr/sbin/nginx -g daemon on; master_process on; -s reload (code=exited, status=0/SUCCESS)
+   Main PID: 2344 (nginx)
+      Tasks: 3 (limit: 1615)
+     Memory: 3.2M (peak: 7.3M)
+        CPU: 73ms
+     CGroup: /system.slice/nginx.service
+             ├─2344 "nginx: master process /usr/sbin/nginx -g daemon on; master_process on;"
+             ├─3026 "nginx: worker process"
+             └─3028 "nginx: worker process"
+
+Sep 13 00:54:48 ubuntuserver systemd[1]: Started nginx.service - A high performance web server and a reverse proxy server.
+Sep 13 00:57:24 ubuntuserver systemd[1]: Reloading nginx.service - A high performance web server and a reverse proxy server...
+Sep 13 00:57:24 ubuntuserver nginx[2826]: 2026/09/13 00:57:24 [notice] 2826#2826: signal process started
+Sep 13 00:57:24 ubuntuserver systemd[1]: Reloaded nginx.service - A high performance web server and a reverse proxy server.
+Sep 13 01:04:51 ubuntuserver systemd[1]: Reloading nginx.service - A high performance web server and a reverse proxy server...
+Sep 13 01:04:51 ubuntuserver nginx[2912]: 2026/09/13 01:04:51 [notice] 2912#2912: signal process started
+Sep 13 01:04:51 ubuntuserver systemd[1]: Reloaded nginx.service - A high performance web server and a reverse proxy server.
+Sep 13 01:10:36 ubuntuserver systemd[1]: Reloading nginx.service - A high performance web server and a reverse proxy server...
+Sep 13 01:10:36 ubuntuserver nginx[3025]: 2026/09/13 01:10:36 [notice] 3025#3025: signal process started
+Sep 13 01:10:36 ubuntuserver systemd[1]: Reloaded nginx.service - A high performance web server and a reverse proxy server.
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+~
+
+vboxuser@ubuntuserver:~$ ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host noprefixroute
+       valid_lft forever preferred_lft forever
+2: enp0s3: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+    link/ether 08:00:27:0d:54:62 brd ff:ff:ff:ff:ff:ff
+    altname enx0800270d5462
+    inet 10.0.2.15/24 metric 100 brd 10.0.2.255 scope global dynamic enp0s3
+       valid_lft 82022sec preferred_lft 82022sec
+    inet6 fd17:625c:f037:2:a00:27ff:fe0d:5462/64 scope global dynamic mngtmpaddr noprefixroute
+       valid_lft 86120sec preferred_lft 14120sec
+    inet6 fe80::a00:27ff:fe0d:5462/64 scope link proto kernel_ll
+       valid_lft forever preferred_lft forever
+vboxuser@ubuntuserver:~$ Connection to localhost closed by remote host.
+Connection to localhost closed.
+(base) PS C:\Users\Jr. Legal> ssh -p 2222 vboxuser@localhost
+vboxuser@localhost's password:
+Welcome to Ubuntu 26.04.1 LTS (GNU/Linux 7.0.0-31-generic x86_64)
+
+ * Documentation:  https://docs.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+ System information as of Sun Sep 13 01:20:09 AM UTC 2026
+
+  System load:             1.18
+  Usage of /:              13.3% of 29.36GB
+  Memory usage:            8%
+  Swap usage:              0%
+  Processes:               123
+  Users logged in:         0
+  IPv4 address for enp0s3: 10.0.2.15
+  IPv6 address for enp0s3: fd17:625c:f037:2:a00:27ff:fe0d:5462
+
+
+Expanded Security Maintenance for Applications is not enabled.
+
+7 updates can be applied immediately.
+To see these additional updates run: apt list --upgradable
+
+Enable ESM Apps to receive additional future security updates.
+See https://ubuntu.com/esm or run: sudo pro status
+
+
+Last login: Sun Sep 13 00:51:39 2026 from 10.0.2.2
+vboxuser@ubuntuserver:~$ ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host noprefixroute
+       valid_lft forever preferred_lft forever
+2: enp0s3: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+    link/ether 08:00:27:0d:54:62 brd ff:ff:ff:ff:ff:ff
+    altname enx0800270d5462
+    inet 10.0.2.15/24 metric 100 brd 10.0.2.255 scope global dynamic enp0s3
+       valid_lft 86373sec preferred_lft 86373sec
+    inet6 fd17:625c:f037:2:a00:27ff:fe0d:5462/64 scope global dynamic mngtmpaddr noprefixroute
+       valid_lft 86374sec preferred_lft 14374sec
+    inet6 fe80::a00:27ff:fe0d:5462/64 scope link proto kernel_ll
+       valid_lft forever preferred_lft forever
+vboxuser@ubuntuserver:~$ Connection to localhost closed by remote host.
+Connection to localhost closed.
+(base) PS C:\Users\Jr. Legal> ssh -p 2222 vboxuser@localhost
+vboxuser@localhost's password:
+Welcome to Ubuntu 26.04.1 LTS (GNU/Linux 7.0.0-31-generic x86_64)
+
+ * Documentation:  https://docs.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+ System information as of Sun Sep 13 01:21:57 AM UTC 2026
+
+  System load:             0.19
+  Usage of /:              13.3% of 29.36GB
+  Memory usage:            7%
+  Swap usage:              0%
+  Processes:               123
+  Users logged in:         0
+  IPv4 address for enp0s3: 10.0.2.15
+  IPv6 address for enp0s3: fd17:625c:f037:2:a00:27ff:fe0d:5462
+
+
+Expanded Security Maintenance for Applications is not enabled.
+
+7 updates can be applied immediately.
+To see these additional updates run: apt list --upgradable
+
+Enable ESM Apps to receive additional future security updates.
+See https://ubuntu.com/esm or run: sudo pro status
+
+
+Last login: Sun Sep 13 01:20:09 2026 from 10.0.2.2
+vboxuser@ubuntuserver:~$ ip a
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    link/loopback 00:00:00:00:00:00 brd 00:00:00:00:00:00
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet6 ::1/128 scope host noprefixroute
+       valid_lft forever preferred_lft forever
+2: enp0s3: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc pfifo_fast state UP group default qlen 1000
+    link/ether 08:00:27:0d:54:62 brd ff:ff:ff:ff:ff:ff
+    altname enx0800270d5462
+    inet 10.0.2.15/24 metric 100 brd 10.0.2.255 scope global dynamic enp0s3
+       valid_lft 86344sec preferred_lft 86344sec
+    inet6 fd17:625c:f037:2:a00:27ff:fe0d:5462/64 scope global dynamic mngtmpaddr noprefixroute
+       valid_lft 86345sec preferred_lft 14345sec
+    inet6 fe80::a00:27ff:fe0d:5462/64 scope link proto kernel_ll
+       valid_lft forever preferred_lft forever
+vboxuser@ubuntuserver:~$ Connection to localhost closed by remote host.
+Connection to localhost closed.
+(base) PS C:\Users\Jr. Legal> ssh vboxuser@192.168.100.76
+The authenticity of host '192.168.100.76 (192.168.100.76)' can't be established.
+ED25519 key fingerprint is SHA256:3obLYyxhvXAHMr28pQMI5qP/aodfTGNJsMAz66h0ZIU.
+This host key is known by the following other names/addresses:
+    C:\Users\Jr. Legal/.ssh/known_hosts:1: [localhost]:2222
+Are you sure you want to continue connecting (yes/no/[fingerprint])? y
+Please type 'yes', 'no' or the fingerprint: yes
+Warning: Permanently added '192.168.100.76' (ED25519) to the list of known hosts.
+vboxuser@192.168.100.76's password:
+Welcome to Ubuntu 26.04.1 LTS (GNU/Linux 7.0.0-31-generic x86_64)
+
+ * Documentation:  https://docs.ubuntu.com
+ * Management:     https://landscape.canonical.com
+ * Support:        https://ubuntu.com/pro
+
+ System information as of Sun Sep 13 01:28:42 AM UTC 2026
+
+  System load:             0.08
+  Usage of /:              13.3% of 29.36GB
+  Memory usage:            7%
+  Swap usage:              0%
+  Processes:               123
+  Users logged in:         0
+  IPv4 address for enp0s3: 192.168.100.76
+  IPv6 address for enp0s3: 2803:2a00:2c14:e813:a00:27ff:fe0d:5462
+
+
+Expanded Security Maintenance for Applications is not enabled.
+
+7 updates can be applied immediately.
+To see these additional updates run: apt list --upgradable
+
+Enable ESM Apps to receive additional future security updates.
+See https://ubuntu.com/esm or run: sudo pro status
+
+
+Last login: Sun Sep 13 01:21:57 2026 from 10.0.2.2
+vboxuser@ubuntuserver:~$ ./pocketbase serve --http=0.0.0.0:8090
+-bash: ./pocketbase: Is a directory
+vboxuser@ubuntuserver:~$ cd ~/pocketbase
+./pocketbase serve --http=0.0.0.0:8090
+-bash: ./pocketbase: No such file or directory
+vboxuser@ubuntuserver:~/pocketbase$ pocketbase serve --http=0.0.0.0:8090
+2026/09/13 01:31:14 Server started at http://0.0.0.0:8090
+├─ REST API: http://0.0.0.0:8090/api/
+└─ Admin UI: http://0.0.0.0:8090/_/
+^Cvboxuser@ubuntuserver:~/pocketbasesudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \ \
+-keyout /etc/ssl/private/pocketbase-selfsigned.key \
+-out /etc/ssl/certs/pocketbase-selfsigned.crt
+[sudo: authenticate] Password:
+.....+++++++++++++++++++++++++++++++++++++++*..+.+++++++++++++++++++++++++++++++++++++++*.+.+.........+...+......+..+.............+..+....+..............+.......+.....+....+...+..+.........+.+......+...++++++
+.........+.....+...+..........+...+++++++++++++++++++++++++++++++++++++++*.......+....+...+..+......+....+...+......+..+.............+...........+++++++++++++++++++++++++++++++++++++++*...+...+....++++++
+-----
+You are about to be asked to enter information that will be incorporated
+into your certificate request.
+What you are about to enter is what is called a Distinguished Name or a DN.
+There are quite a few fields but you can leave some blank
+For some fields there will be a default value,
+If you enter '.', the field will be left blank.
+-----
+Country Name (2 letter code) [AU]:py
+State or Province Name (full name) [Some-State]:sain lawrence
+Locality Name (eg, city) []:saint lawrence
+Organization Name (eg, company) [Internet Widgits Pty Ltd]:fpuna
+Organizational Unit Name (eg, section) []:fpuna
+Common Name (e.g. server FQDN or YOUR name) []:juninho
+Email Address []:jl@g.net
+vboxuser@ubuntuserver:~/pocketbase$ /etc/nginx/sites-available/pocketbase
+-bash: /etc/nginx/sites-available/pocketbase: Permission denied
+vboxuser@ubuntuserver:~/pocketbase$ sudo nano /etc/nginx/sites-available/pocketbase
+vboxuser@ubuntuserver:~/pocketbase$ sudo nginx -t
+sudo systemctl reload nginx
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+vboxuser@ubuntuserver:~/pocketbase$ pocketbase serve --http=0.0.0.0:8090
+2026/09/13 01:36:26 Server started at http://0.0.0.0:8090
+├─ REST API: http://0.0.0.0:8090/api/
+└─ Admin UI: http://0.0.0.0:8090/_/
