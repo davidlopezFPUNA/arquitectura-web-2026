@@ -560,3 +560,10 @@ Status code distribution:
 
 ---
 
+### 4.6 Corregir al menos dos hallazgos técnicos o justificar formalmente por qué se aceptan como riesgo.
+
+| Hallazgo técnico | Evidencia | Acción | Justificación |
+|------------------|-----------|--------|---------------|
+| Certificado autofirmado | Advertencia SSL/TLS en navegador al acceder a `https://proyecto-web.local/_/` | Se acepta como riesgo | Es un entorno de pruebas, no compromete seguridad crítica. En producción se instalaría un certificado confiable (ej. Let’s Encrypt). |
+| Falta de métricas persistentes | Observación manual con `htop` y `iotop` sin registros históricos | Se acepta como riesgo | Se considera suficiente la observación manual mientras la demanda sea baja. Se implementará monitoreo persistente solo si aparecen sospechas de alta carga o problemas de rendimiento. |
+
