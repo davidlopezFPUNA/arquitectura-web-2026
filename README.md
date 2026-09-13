@@ -640,3 +640,17 @@ Esta sección consolida los 12 puntos de evaluación requeridos para la validaci
 * **Archivo de Log:** `logs/f3_curl_timing.txt`
 * **Captura:**
 <img width="1435" height="290" alt="F3-E2_curl_timing" src="https://github.com/user-attachments/assets/a3926d26-cbb5-43b0-b277-37a16c61630c" />
+
+---
+
+### F4-E1: Configuración y Estado del Firewall (UFW)
+* **ID:** F4-E1
+* **Título:** Verificación de reglas activas e interfaces protegidas por UFW.
+* **Fecha:** 13/09/2026
+* **Origen:** VM Ubuntu (`equipo-vm`).
+* **Comando Ejecutado:** `sudo ufw status`
+* **Salida Relevante:** `Status: active`, servicios autorizados en puertos 22/tcp (SSH), 80/tcp (HTTP) y 443/tcp (HTTPS).
+* **Explicación y Conclusión:** Valida que el filtro de paquetes está operativo restringiendo la exposición de la máquina exclusivamente a las aplicaciones necesarias (Nginx y SSH), manteniendo PocketBase aislada.
+* **Archivo de Log:** `logs/f4_ufw_status.txt`
+* **Captura:**
+<img width="514" height="246" alt="F4-E1_ufw_status" src="https://github.com/user-attachments/assets/732a651e-7b0b-4622-9bbb-331bea88e0ae" />
