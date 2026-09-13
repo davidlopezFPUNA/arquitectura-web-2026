@@ -283,7 +283,7 @@ Análisis del flujo de tramas registradas en el archivo `captura_https.pcap` sob
   * `Cliente -> Servidor [FIN, ACK]` (`Flags [F.]`): Finalización limpia y ordenada de la sesión TCP.
 
 # Entrega 4: Resiliencia, seguridad
-#1 Verificar firewall y superficie expuesta: sólo deben quedar abiertos los puertos necesarios. Explicar
+#4.1 Verificar firewall y superficie expuesta: sólo deben quedar abiertos los puertos necesarios. Explicar
 cada excepción.
 ```
 sudo ufw status verbose
@@ -303,13 +303,11 @@ To                         Action      From
 ```
 Fuera del servidor solo van a estar accesibles:
 
-22/tcp → SSH (administración remota).
+- **22/tcp → SSH**: administración remota
+- **80/tcp → HTTP**: redirección o acceso web
+- **443/tcp → HTTPS**: aplicación web segura
 
-80/tcp → HTTP (redirección o acceso web).
-
-443/tcp → HTTPS (aplicación web segura).
-
-#2 Auditar cabeceras de seguridad: HSTS 
+#4.2 Auditar cabeceras de seguridad: HSTS 
 ```
 PS  $response = Invoke-WebRequest -Uri https://proyecto-web.local/_/ -SkipCertificateCheck
 PS  $response.Headers
@@ -336,3 +334,92 @@ Content-Security-Policy (CSP): en este caso restringe la carga de recursos a 'se
 X-Content-Type-Options: configurado como nosniff, impide que el navegador intente adivinar tipos de contenido, reduciendo el riesgo de ejecución de archivos maliciosos.
 
 Referrer-Policy: definido como no-referrer-when-downgrade, controla la información de referencia enviada al navegar, protegiendo datos sensibles al evitar que se transmitan a sitios inseguros.
+
+#4.3 Ejecutar pruebas funcionales y de error: ruta válida, 404, método no permitido, caída y recuperación
+del backend, reinicio de VM y persistencia.
+#4.3.1 Prueba de ruta válida
+```
+curl -vk https://proyecto-web.local/_/#/login -o /dev/null -D -
+* Host proyecto-web.local:443 was resolved.
+ GET /_/ HTTP/1.1
+> Host: proyecto-web.local
+> User-Agent: curl/8.21.0
+> Accept: */*
+>
+* Request completely sent off
+* schannel: remote party requests renegotiation
+* schannel: renegotiating SSL/TLS connection
+* schannel: SSL/TLS connection renegotiated
+* schannel: remote party requests renegotiation
+* schannel: renegotiating SSL/TLS connection
+* schannel: SSL/TLS connection renegotiated
+< HTTP/1.1 200 OK
+HTTP/1.1 200 OK
+< Server: nginx/1.28.3 (Ubuntu)
+Server: nginx/1.28.3 (Ubuntu)
+< Date: Sun, 13 Sep 2026 18:30:17 GMT
+Date: Sun, 13 Sep 2026 18:30:17 GMT
+< Content-Type: text/html; charset=utf-8
+Content-Type: text/html; charset=utf-8
+< Content-Length: 3442
+Content-Length: 3442
+< Connection: keep-alive
+Connection: keep-alive
+< Accept-Ranges: bytes
+Accept-Ranges: bytes
+< Vary: Origin
+Vary: Origin
+< Vary: Accept-Encoding
+Vary: Accept-Encoding
+< X-Content-Type-Options: nosniff
+X-Content-Type-Options: nosniff
+< X-Frame-Options: SAMEORIGIN
+X-Frame-Options: SAMEORIGIN
+< X-Xss-Protection: 1; mode=block
+X-Xss-Protection: 1; mode=block
+< Strict-Transport-Security: max-age=31536000; includeSubDomains
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+< Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';
+Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';
+< X-Content-Type-Options: nosniff
+```
+-** -vk → ignora certificado y muestra detalle.
+
+-** -o /dev/null → descarta el cuerpo.
+
+-** -D - → imprime solo las cabeceras.
+# 4.3.2 Prueba de ruta inválida
+
+```
+ curl -vk https://proyecto-web.local/cualquiercosa -o /dev/null -D -
+* Host proyecto-web.local:443 was resolved.
+HTTP/1.1 404 Not Found
+HTTP/1.1 404 Not Found
+< Server: nginx/1.28.3 (Ubuntu)
+Server: nginx/1.28.3 (Ubuntu)
+< Date: Sun, 13 Sep 2026 18:36:01 GMT
+Date: Sun, 13 Sep 2026 18:36:01 GMT
+< Content-Type: application/json; charset=UTF-8
+Content-Type: application/json; charset=UTF-8
+< Content-Length: 46
+Content-Length: 46
+< Connection: keep-alive
+Connection: keep-alive
+< Vary: Origin
+Vary: Origin
+< X-Content-Type-Options: nosniff
+X-Content-Type-Options: nosniff
+< X-Frame-Options: SAMEORIGIN
+X-Frame-Options: SAMEORIGIN
+< X-Xss-Protection: 1; mode=block
+X-Xss-Protection: 1; mode=block
+< Strict-Transport-Security: max-age=31536000; includeSubDomains
+Strict-Transport-Security: max-age=31536000; includeSubDomains
+< Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';
+Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';
+< X-Content-Type-Options: nosniff
+X-Content-Type-Options: nosniff
+< Referrer-Policy: no-referrer-when-downgrade
+Referrer-Policy: no-referrer-when-downgrade
+```
+-** Retorno de 404 
