@@ -180,4 +180,71 @@ sudo systemctl restart pocketbase
 
 <img width="1533" height="766" alt="Captura de pantalla 2026-09-12 214951" src="https://github.com/user-attachments/assets/1143c519-5e58-46e7-ac48-1f8e29b47f9d" />
 
+# Entregable 3: Habilitación de HTTPS, Análisis TLS y Rendimiento
 
+Este documento recopila la configuración, la caracterización técnica del certificado X.509, las pruebas de redirección HTTP/HTTPS, las métricas de latencia y el análisis de tráfico de red para la infraestructura del dominio `proyecto-web.local`.
+
+---
+
+## 1. Caracterización del Certificado Digital (X.509)
+
+El certificado autofirmado generado con OpenSSL y desplegado en `/etc/ssl/proyecto-web/proyecto-web.crt` presenta las siguientes especificaciones técnicas:
+
+| Parámetro | Valor Registrado |
+| :--- | :--- |
+| **Sujeto (Subject)** | `C = PY, ST = Central, L = Asuncion, O = ArquitecturaWeb, CN = proyecto-web.local` |
+| **Emisor (Issuer)** | `C = PY, ST = Central, L = Asuncion, O = ArquitecturaWeb, CN = proyecto-web.local` |
+| **Período de Validez** | `Sep 13 01:09:23 2026 GMT` a `Sep 13 01:09:23 2027 GMT` |
+| **Nombres Alternativos (SAN)** | `DNS:proyecto-web.local`, `IP Address:192.168.1.25` |
+| **Algoritmo de Firma y Clave** | RSA 2048 bits / `sha256WithRSAEncryption` |
+| **Huella Digital (SHA-256)** | `4C:4B:72:9B:C2:2B:F7:D0:B6:AB:B0:BF:4E:2D:6F:50:93:CB:B7:00:46:D3:6D:76:DD:DD:F2:4E:E1:43:3C:32` |
+
+---
+
+## 2. Verificación de Redirección y Protocolo HTTPS
+
+### Redirección HTTP a HTTPS
+La consulta al puerto 80 mediante `curl -I http://proyecto-web.local` ratifica la redirección forzada a nivel de servidor Web:
+
+* **Código de Estado:** `HTTP/1.1 301 Moved Permanently`
+* **Cabecera de Ubicación:** `Location: https://proyecto-web.local/`
+
+### Negociación de Canal Cifrado
+* **Versión del Protocolo:** `TLSv1.3`
+* **Algoritmo de Cifrado (Cipher Suite):** `TLS_AES_256_GCM_SHA384`
+* **Intercambio de Claves:** `X25519` / `RSASSA-PSS`
+
+> **Justificación Técnica de Advertencia en Navegador:** El navegador señala la conexión como *No segura* debido a que el certificado es autofirmado y su Entidad Emisora (CA) no está agregada en el almacén de certificados de confianza del sistema operativo cliente. El cifrado del canal TLS funciona adecuadamente a nivel de transporte.
+
+---
+
+## 3. Análisis de Rendimiento (curl -w)
+
+Resumen estadístico derivado de las 10 ejecuciones secuenciales sobre el recurso `https://proyecto-web.local/_/`:
+
+| Fase de Conexión | Tiempos Mínimos | Promedio (10 it.) | Tiempos Máximos |
+| :--- | :--- | :--- | :--- |
+| **Resolución DNS (`time_namelookup`)** | 1.16 ms | **1.88 ms** | 3.25 ms |
+| **Conexión TCP (`time_connect`)** | 1.45 ms | **2.30 ms** | 3.55 ms |
+| **Apretón TLS (`time_appconnect`)** | 10.51 ms | **13.95 ms** | 18.45 ms |
+| **Primer Byte / TTFB (`time_starttransfer`)** | 13.43 ms | **18.46 ms** | 23.39 ms |
+| **Tiempo Total (`time_total`)** | 13.50 ms | **18.53 ms** | 23.46 ms |
+
+**Interpretación de Resultados:** El intercambio de claves TLS promedió **13.95 ms**, constituyendo el **75.2%** de la latencia total del primer acceso. Las conexiones subsecuentes reducen este valor mediante la reutilización de la sesión TLS.
+
+---
+
+## 4. Captura e Interpretación de Tráfico (tcpdump)
+
+Inspección de las tramas capturadas en el archivo `captura_https.pcap` a través de la interfaz de bucle de retorno (`lo`):
+
+* **Establecimiento de Sesión TCP (3-Way Handshake):**
+  * `Cliente -> Servidor [SYN]` (`seq 3123783644`, puerto de origen `46382` hacia `443`).
+  * `Servidor -> Cliente [SYN, ACK]` (`seq 3670356629`, `ack 3123783645`).
+  * `Cliente -> Servidor [ACK]` (`ack 1`, canal de capa 4 establecido).
+* **Inicio del Canal TLS 1.3:**
+  * `Cliente -> Servidor [PUSH, ACK]` (`Client Hello`, 517 bytes con indicación SNI).
+  * `Servidor -> Cliente [PUSH, ACK]` (`Server Hello` + entrega de certificado, 1563 bytes).
+* **Intercambio y Cierre:**
+  * Envío de datos HTTP cifrados (`Application Data`, 3791 bytes).
+  * Desconexión ordenada a nivel TCP mediante la bandera `FIN` (`Flags [F.]`).
