@@ -182,45 +182,51 @@ sudo systemctl restart pocketbase
 
 # Entrega 3: DNS local, TLS, HTTP y medición
 
-Este documento recopila la configuración, la caracterización técnica del certificado X.509, las pruebas de redirección HTTP/HTTPS, las métricas de latencia y el análisis de tráfico de red para la infraestructura del dominio `proyecto-web.local`.
+Este documento consolida la configuración del dominio local, la caracterización del certificado X.509, el análisis de rendimiento, las estrategias de almacenamiento en caché, la comparativa de arquitectura backend/proxy y la captura de tráfico de red.
 
 ---
 
-## 1. Caracterización del Certificado Digital (X.509)
+## 1. Identificación y Resolución DNS Local
 
-El certificado autofirmado generado con OpenSSL y desplegado en `/etc/ssl/proyecto-web/proyecto-web.crt` presenta las siguientes especificaciones técnicas:
+Se diferencian los cuatro elementos fundamentales de la arquitectura de red:
+
+* **Nombre de Dominio:** `proyecto-web.local` (Identificador alfanumérico legible resuelto localmente vía `/etc/hosts`).
+* **Dirección IP:** `127.0.0.1` / `192.168.1.25` (Dirección lógica de Capa 3 para el enrutamiento del paquete).
+* **Puertos de Red:** `80` (HTTP - Redirección), `443` (HTTPS - Nginx Proxy), `8090` (HTTP - Backend PocketBase).
+* **URL Completa:** `https://proyecto-web.local/_/` (Localizador global que especifica esquema, host, puerto implícito 443 y ruta).
+
+---
+
+## 2. Caracterización del Certificado Digital (X.509)
+
+El certificado autofirmado alojado en `/etc/ssl/proyecto-web/proyecto-web.crt` presenta los siguientes parámetros técnicos:
 
 | Parámetro | Valor Registrado |
 | :--- | :--- |
 | **Sujeto (Subject)** | `C = PY, ST = Central, L = Asuncion, O = ArquitecturaWeb, CN = proyecto-web.local` |
 | **Emisor (Issuer)** | `C = PY, ST = Central, L = Asuncion, O = ArquitecturaWeb, CN = proyecto-web.local` |
+| **Cadena de Confianza** | Un solo nivel (Certificado Raíz Autofirmado = Certificado Hoja) |
 | **Período de Validez** | `Sep 13 01:09:23 2026 GMT` a `Sep 13 01:09:23 2027 GMT` |
 | **Nombres Alternativos (SAN)** | `DNS:proyecto-web.local`, `IP Address:192.168.1.25` |
 | **Algoritmo de Firma y Clave** | RSA 2048 bits / `sha256WithRSAEncryption` |
 | **Huella Digital (SHA-256)** | `4C:4B:72:9B:C2:2B:F7:D0:B6:AB:B0:BF:4E:2D:6F:50:93:CB:B7:00:46:D3:6D:76:DD:DD:F2:4E:E1:43:3C:32` |
 
+> **Evaluación de Confianza del Navegador:** El cliente emite una advertencia de seguridad (*No seguro*) debido a que la Entidad Emisora (Issuer) es autofirmada y no reside en el almacén de autoridades de certificación raíz de confianza (Trust Store) del sistema operativo del cliente. A nivel de cifrado de canal, TLS garantiza confidencialidad e integridad.
+
 ---
 
-## 2. Verificación de Redirección y Protocolo HTTPS
+## 3. Redirección HTTP a HTTPS y Negociación TLS
 
-### Redirección HTTP a HTTPS
-La consulta al puerto 80 mediante `curl -I http://proyecto-web.local` ratifica la redirección forzada a nivel de servidor Web:
-
-* **Código de Estado:** `HTTP/1.1 301 Moved Permanently`
-* **Cabecera de Ubicación:** `Location: https://proyecto-web.local/`
-
-### Negociación de Canal Cifrado
-* **Versión del Protocolo:** `TLSv1.3`
-* **Algoritmo de Cifrado (Cipher Suite):** `TLS_AES_256_GCM_SHA384`
+* **Redirección:** `curl -I http://proyecto-web.local` confirma la respuesta `HTTP/1.1 301 Moved Permanently` con la cabecera `Location: https://proyecto-web.local/`.
+* **Protocolo Negociado:** `TLSv1.3`
+* **Cipher Suite:** `TLS_AES_256_GCM_SHA384`
 * **Intercambio de Claves:** `X25519` / `RSASSA-PSS`
 
-> **Justificación Técnica de Advertencia en Navegador:** El navegador señala la conexión como *No segura* debido a que el certificado es autofirmado y su Entidad Emisora (CA) no está agregada en el almacén de certificados de confianza del sistema operativo cliente. El cifrado del canal TLS funciona adecuadamente a nivel de transporte.
-
 ---
 
-## 3. Análisis de Rendimiento (curl -w)
+## 4. Análisis de Rendimiento (Métricas `curl -w`)
 
-Resumen estadístico derivado de las 10 ejecuciones secuenciales sobre el recurso `https://proyecto-web.local/_/`:
+Resumen estadístico derivado de 10 ejecuciones secuenciales hacia `https://proyecto-web.local/_/`:
 
 | Fase de Conexión | Tiempos Mínimos | Promedio (10 it.) | Tiempos Máximos |
 | :--- | :--- | :--- | :--- |
@@ -230,21 +236,20 @@ Resumen estadístico derivado de las 10 ejecuciones secuenciales sobre el recurs
 | **Primer Byte / TTFB (`time_starttransfer`)** | 13.43 ms | **18.46 ms** | 23.39 ms |
 | **Tiempo Total (`time_total`)** | 13.50 ms | **18.53 ms** | 23.46 ms |
 
-**Interpretación de Resultados:** El intercambio de claves TLS promedió **13.95 ms**, constituyendo el **75.2%** de la latencia total del primer acceso. Las conexiones subsecuentes reducen este valor mediante la reutilización de la sesión TLS.
+**Interpretación:** La fase TLS (`13.95 ms`) representa la mayor fracción del tiempo de conexión inicial por la negociación asimétrica Handshake.
 
 ---
 
-## 4. Captura e Interpretación de Tráfico (tcpdump)
+## 5. Análisis de Caché, Compresión y Respuestas HTTP 304
 
-Inspección de las tramas capturadas en el archivo `captura_https.pcap` a través de la interfaz de bucle de retorno (`lo`):
+* **Estado Actual:** PocketBase entrega los assets embebidos sin cabeceras explícitas de caché persistente (`Cache-Control` o `ETag`), devolviendo código `200 OK` directo.
+* **Propuesta de Optimización en Nginx:** Para habilitar validación condicional (`304 Not Modified`) y reducir transferencia de red, se sugiere incorporar en el bloque de Nginx:
 
-* **Establecimiento de Sesión TCP (3-Way Handshake):**
-  * `Cliente -> Servidor [SYN]` (`seq 3123783644`, puerto de origen `46382` hacia `443`).
-  * `Servidor -> Cliente [SYN, ACK]` (`seq 3670356629`, `ack 3123783645`).
-  * `Cliente -> Servidor [ACK]` (`ack 1`, canal de capa 4 establecido).
-* **Inicio del Canal TLS 1.3:**
-  * `Cliente -> Servidor [PUSH, ACK]` (`Client Hello`, 517 bytes con indicación SNI).
-  * `Servidor -> Cliente [PUSH, ACK]` (`Server Hello` + entrega de certificado, 1563 bytes).
-* **Intercambio y Cierre:**
-  * Envío de datos HTTP cifrados (`Application Data`, 3791 bytes).
-  * Desconexión ordenada a nivel TCP mediante la bandera `FIN` (`Flags [F.]`).
+```nginx
+location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+    proxy_pass [http://127.0.0.1:8090](http://127.0.0.1:8090);
+    expires 1d;
+    add_header Cache-Control "public, no-transform";
+    gzip on;
+    gzip_types text/plain text/css application/javascript image/svg+xml;
+}
