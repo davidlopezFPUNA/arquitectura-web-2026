@@ -253,3 +253,31 @@ location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
     gzip on;
     gzip_types text/plain text/css application/javascript image/svg+xml;
 }
+```
+---
+## 6. Comparativa: Acceso Directo Backend vs. Reverse Proxy
+
+| Criterio | Acceso Directo (`http://127.0.0.1:8090`) | Acceso Mediante Proxy (`https://proyecto-web.local`) |
+| :--- | :--- | :--- |
+| **Seguridad de Transporte** | Tráfico HTTP en texto claro (sin cifrado) | Cifrado SSL/TLS 1.3 de extremo a extremo |
+| **Aislamiento y Exposición** | Expone el puerto del servicio Go directamente a la red | Oculta la infraestructura interna tras Capa 7 (Nginx) |
+| **Cabeceras de Seguridad** | Limitadas por la configuración por defecto del backend | Inyección centralizada de políticas (`X-Frame-Options`, `nosniff`) |
+| **Rendimiento y Latencia** | Menor latencia procesada por omitir la capa SSL | Ligera sobrecarga inicial (~14 ms) por handshake TLS |
+
+---
+
+## 7. Captura e Interpretación de Tráfico (`tcpdump`)
+
+Análisis del flujo de tramas registradas en el archivo `captura_https.pcap` sobre la interfaz de bucle de retorno (`lo`):
+
+* **Resolución de Red (DNS / ARP):** Al operar sobre la interfaz local loopback (`127.0.0.1`), las solicitudes no requirieron tramas ARP en la interfaz física ni consultas DNS externas; el mapeo de `proyecto-web.local` fue resuelto a nivel de sistema por la pila de red vía `/etc/hosts`.
+* **Establecimiento de Sesión TCP (3-Way Handshake):**
+  * `Cliente -> Servidor [SYN]` (`seq 3123783644`, puerto efímero de origen `46382` hacia `443`).
+  * `Servidor -> Cliente [SYN, ACK]` (`seq 3670356629`, `ack 3123783645`).
+  * `Cliente -> Servidor [ACK]` (Canal de transporte Capa 4 establecido correctamente).
+* **Tráfico Cifrado TLS 1.3:**
+  * `Client Hello` (`Flags [P.]`, 517 bytes): El cliente envía los parámetros de cifrado soportados y la extensión SNI con el nombre `proyecto-web.local`.
+  * `Server Hello` (`Flags [P.]`, 1563 bytes): Nginx responde entregando el certificado X.509 autofirmado y negociando el cipher suite `TLS_AES_256_GCM_SHA384`.
+  * `Application Data` (`length 3791 B`): Transferencia de la carga útil HTTP cifrada sin posibilidad de lectura en texto claro en la traza.
+* **Cierre de Conexión:**
+  * `Cliente -> Servidor [FIN, ACK]` (`Flags [F.]`): Finalización limpia y ordenada de la sesión TCP.
