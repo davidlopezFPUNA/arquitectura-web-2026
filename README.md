@@ -284,7 +284,7 @@ Análisis del flujo de tramas registradas en el archivo `captura_https.pcap` sob
 
 ---
 
-# Entrega 4 — Informe Técnico de Resiliencia, Seguridad, Cierre y Defensa de Arquitectura
+# Entrega 4 — Resiliencia, Seguridad, Cierre y Defensa
 
 **Proyecto:** Despliegue de Servicios Web Seguros y Resilientes  
 **Servidor Target:** Ubuntu 24.04.4 LTS (`equipo-vm` / `192.168.1.25`)  
