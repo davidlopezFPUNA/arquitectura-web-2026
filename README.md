@@ -176,3 +176,94 @@ Se validó la capacidad de almacenamiento no volátil del motor SQLite registran
 ```bash
 # Reinicio del servicio para comprobar no volatilidad
 sudo systemctl restart pocketbase
+```
+## Entrega 3 - DNS local, TLS, HTTP y medición 
+## 1  Resolver el nombre local y demostrar la diferencia entre nombre, dirección IP, puerto y URL. 
+#1.1 El nombre es proyecto-web.local, la direccion ip asignada es la 192.100.76
+```
+(base) PS C:\Users\Jr. Legal> ping proyecto-web.local
+
+Haciendo ping a proyecto-web.local [192.168.100.76] con 32 bytes de datos:
+Respuesta desde 192.168.100.76: bytes=32 tiempo<1m TTL=64
+Respuesta desde 192.168.100.76: bytes=32 tiempo<1m TTL=64
+Respuesta desde 192.168.100.76: bytes=32 tiempo<1m TTL=64
+Respuesta desde 192.168.100.76: bytes=32 tiempo<1m TTL=64
+
+Estadísticas de ping para 192.168.100.76:
+    Paquetes: enviados = 4, recibidos = 4, perdidos = 0
+    (0% perdidos),
+Tiempos aproximados de ida y vuelta en milisegundos:
+    Mínimo = 0ms, Máximo = 0ms, Media = 0ms
+```
+#1.2 Puertos
+```
+curl http://proyecto-web.local:80
+StatusCode        : 200
+StatusDescription : OK
+Content           : <!DOCTYPE html>
+                    <html>
+                    <head>
+                    <title>Welcome to nginx!</title>
+                    <style>
+                    html { color-scheme: light dark; }
+                    body { width: 35em; margin: 0 auto;
+                    font-family: Tahoma, Verdana, Arial, sans-serif; }
+                    </style...
+RawContent        : HTTP/1.1 200 OK
+                    Connection: keep-alive
+                    Accept-Ranges: bytes
+                    Content-Length: 615
+                    Content-Type: text/html
+                    Date: Sun, 13 Sep 2026 01:44:09 GMT
+                    ETag: "6aa5f457-267"
+                    Last-Modified: Sun, 13 Sep 2026 ...
+Forms             : {}
+Headers           : {[Connection, keep-alive], [Accept-Ranges, bytes], [Content-Length, 615], [Content-Type,
+                    text/html]...}
+Images            : {}
+InputFields       : {}
+Links             : {@{innerHTML=nginx.org; innerText=nginx.org; outerHTML=<A href="http://nginx.org/">nginx.org</A>;
+                    outerText=nginx.org; tagName=A; href=http://nginx.org/}, @{innerHTML=nginx.com;
+                    innerText=nginx.com; outerHTML=<A href="http://nginx.com/">nginx.com</A>; outerText=nginx.com;
+                    tagName=A; href=http://nginx.com/}}
+ParsedHtml        : System.__ComObject
+RawContentLength  : 615
+
+
+curl -vk https://proyecto-web.local:443
+* Host proyecto-web.local:443 was resolved.
+* IPv6: (none)
+* IPv4: 192.168.100.76
+*   Trying 192.168.100.76:443...
+* schannel: disabled automatic use of client certificate
+* ALPN: curl offers http/1.1
+* ALPN: server accepted http/1.1
+* Established connection to proyecto-web.local (192.168.100.76 port 443) from 192.168.100.8 port 51866
+* using HTTP/1.x
+> GET / HTTP/1.1
+> Host: proyecto-web.local
+> User-Agent: curl/8.21.0
+> Accept: */*
+>
+* Request completely sent off
+* schannel: remote party requests renegotiation
+* schannel: renegotiating SSL/TLS connection
+* schannel: SSL/TLS connection renegotiated
+* schannel: remote party requests renegotiation
+* schannel: renegotiating SSL/TLS connection
+* schannel: SSL/TLS connection renegotiated
+< HTTP/1.1 404 Not Found
+< Server: nginx/1.28.3 (Ubuntu)
+< Date: Sun, 13 Sep 2026 01:47:24 GMT
+< Content-Type: application/json; charset=UTF-8
+< Content-Length: 46
+< Connection: keep-alive
+< Vary: Origin
+< X-Content-Type-Options: nosniff
+< X-Frame-Options: SAMEORIGIN
+< X-Xss-Protection: 1; mode=block
+
+```
+
+
+
