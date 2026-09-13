@@ -176,3 +176,8 @@ Se validó la capacidad de almacenamiento no volátil del motor SQLite registran
 ```bash
 # Reinicio del servicio para comprobar no volatilidad
 sudo systemctl restart pocketbase
+```
+
+<img width="1533" height="766" alt="Captura de pantalla 2026-09-12 214951" src="https://github.com/user-attachments/assets/1143c519-5e58-46e7-ac48-1f8e29b47f9d" />
+
+
