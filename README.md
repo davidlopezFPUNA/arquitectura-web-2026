@@ -161,3 +161,18 @@ Server: nginx/1.24.0 (Ubuntu)
 Content-Type: text/html; charset=utf-8
 X-Frame-Options: SAMEORIGIN
 X-Content-Type-Options: nosniff
+
+```
+---
+### 3. Prueba de Persistencia de Datos
+
+Se validó la capacidad de almacenamiento no volátil del motor SQLite registrando datos en el Admin UI y verificando su integridad tras reiniciar el daemon del servicio:
+
+* **Colección:** `contactos`
+* **Campo creado:** `nombre` (Plain text)
+* **Registro de prueba:** `David López` (ID: `jjgykjsh7a0tf0d`)
+* **Ubicación del archivo de base de datos:** `/home/dlopez/pocketbase/pb_data/data.db`
+
+```bash
+# Reinicio del servicio para comprobar no volatilidad
+sudo systemctl restart pocketbase
