@@ -139,7 +139,7 @@ Se configuró la resolución por nombre en el archivo `hosts` del equipo anfitri
 * **Binding interno (PocketBase):** `http://127.0.0.1:8090` (Aislado de la red pública)
 
 ---
-Entrega 1 — Descubrimiento, selección y línea base
+
 ### 2. Comandos de Diagnóstico y Evidencias HTTP
 
 ```text
