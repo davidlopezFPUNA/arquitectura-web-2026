@@ -1,0 +1,52 @@
+openapi: 3.1.0
+info:
+  title: BookStack Export Service API
+  version: 2.0.0
+paths:
+  /v2/export/{page_id}:
+    post:
+      summary: Solicitar exportación asíncrona
+      responses:
+        '202':
+          description: Accepted - Trabajo encolado
+          content:
+            application/json:
+              example:
+                job_id: "123e4567-e89b-12d3-a456-426614174000"
+                status: "pending"
+openapi: 3.1.0
+info:
+  title: BookStack Search Service API
+  version: 2.0.0
+paths:
+  /v2/search:
+    get:
+      summary: Búsqueda de texto completo
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Resultados encontrados
+          content:
+            application/json:
+              example:
+                data:
+                  - id: 1
+                    title: "Página de ejemplo"
+                    url: "/books/docs/page/ejemplo"
+        '400':
+          description: Bad Request (Falta parámetro 'q')
+        '404':
+          description: Not Found
+        '503':
+          description: Service Unavailable (Error de conexión a Meilisearch)

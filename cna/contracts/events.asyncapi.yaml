@@ -1,0 +1,71 @@
+asyncapi: 3.0.0
+info:
+  title: BookStack Event Bus
+  version: 1.0.0
+channels:
+  bookstack.page.created:
+    address: 'bookstack.page.created'
+    messages:
+      publish:
+        $ref: '#/components/messages/StandardEvent'
+  bookstack.page.updated:
+    address: 'bookstack.page.updated'
+    messages:
+      publish:
+        $ref: '#/components/messages/StandardEvent'
+  bookstack.page.deleted:
+    address: 'bookstack.page.deleted'
+    messages:
+      publish:
+        $ref: '#/components/messages/StandardEvent'
+  export.requested:
+    address: 'export.requested'
+    messages:
+      publish:
+        $ref: '#/components/messages/StandardEvent'
+  export.completed:
+    address: 'export.completed'
+    messages:
+      publish:
+        $ref: '#/components/messages/StandardEvent'
+  media.uploaded:
+    address: 'media.uploaded'
+    messages:
+      publish:
+        $ref: '#/components/messages/StandardEvent'
+
+components:
+  messages:
+    StandardEvent:
+      name: StandardEventEnvelope
+      payload:
+        type: object
+        required:
+          - event_id
+          - type
+          - version
+          - occurred_at
+          - request_id
+          - payload
+        properties:
+          event_id:
+            type: string
+            format: uuid
+            description: Identificador único del evento para idempotencia.
+          type:
+            type: string
+            example: "bookstack.page.updated"
+          version:
+            type: string
+            example: "1.0"
+          occurred_at:
+            type: string
+            format: date-time
+            description: Timestamp ISO 8601
+          request_id:
+            type: string
+            format: uuid
+            description: ID de trazabilidad originado en el API Gateway.
+          payload:
+            type: object
+            description: Datos específicos del evento (ej. atributos de la página).
