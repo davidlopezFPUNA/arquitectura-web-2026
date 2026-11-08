@@ -75,3 +75,73 @@ flowchart TD
     %% Relaciones Síncronas (REST)
     S1_API -- "Consulta (Cliente/Proveedor)" --> PB
     S3_API -- "Consulta (Cliente/Proveedor)" --> PB
+
+````
+
+# 4.2. A2 – Registro de Decisiones de Arquitectura (ADR-006 a ADR-010)
+
+A continuación, se documentan las decisiones arquitectónicas para la extracción de microservicios desde el monolito BookStack.
+
+---
+
+## ADR-006: Estrategia de Migración e Integración con el Monolito
+
+* **Estatus:** Aceptado.
+* **Contexto:** El monolito BookStack se encuentra en producción y debe continuar operando sin interrupciones mientras se extraen progresivamente funcionalidades hacia nuevos microservicios.
+* **Decisión:** Implementar el **Patrón Strangler Fig** integrando los sistemas exclusivamente mediante API REST (para consultas síncronas) y Webhooks (para notificaciones asíncronas), sin realizar modificaciones en el código fuente de BookStack. Un API Gateway (Nginx) actuará como enrutador frontal para desviar el tráfico gradualmente hacia los nuevos servicios (`/v2/*`).
+* **Alternativa Descartada:** *Big Bang Rewrite* o modificación del código fuente del monolito. Se descartó porque modificar el código PHP de BookStack aumenta el riesgo de regresiones, rompe la compatibilidad con futuras actualizaciones del producto original y requiere mayor tiempo de desarrollo.
+* **Consecuencias:** 
+  * (+) Reducción drástica del riesgo de caída del sistema actual.
+  * (+) Facilita actualizaciones del monolito sin afectar nuestra arquitectura.
+  * (-) Requiere la implementación de un componente intermediario (`event-bridge`) para traducir y enrutar los Webhooks hacia el bus de mensajería.
+
+---
+
+## ADR-007: Selección del Broker de Mensajes
+
+* **Estatus:** Aceptado.
+* **Contexto:** Se necesita un sistema de mensajería para entregar de manera confiable los eventos generados por el `event-bridge` hacia los consumidores (servicios de búsqueda, auditoría y exportación), asegurando que no se pierdan mensajes si un servicio se reinicia.
+* **Decisión:** Seleccionar **RabbitMQ** (o alternativamente **NATS JetStream** si el consumo de recursos lo requiere) como broker principal para la comunicación asíncrona. Se configurarán colas durables para garantizar la persistencia de los eventos.
+* **Alternativa Descartada:** *Redis Streams*. Aunque es muy rápido y consume poca RAM, su modelo de persistencia y enrutamiento avanzado no es tan robusto nativamente como el de RabbitMQ para garantizar "cero pérdida de eventos" ante caídas prolongadas de los consumidores en infraestructuras limitadas.
+* **Consecuencias:** 
+  * (+) Garantía de entrega (at-least-once) mediante confirmaciones (ACKs).
+  * (+) Desacoplamiento total entre la emisión de webhooks y el procesamiento.
+  * (-) Incremento en el consumo de memoria RAM de la máquina virtual (VM-2) por el motor de RabbitMQ.
+
+---
+
+## ADR-008: Plataforma de Orquestación
+
+* **Estatus:** Aceptado.
+* **Contexto:** La infraestructura proporcionada está fuertemente restringida: máquinas virtuales (VMware Workstation) con apenas 2 vCPU y 4 GB de RAM.
+* **Decisión:** Utilizar **Docker Compose** en un único nodo de servicios (VM-2) para gestionar los contenedores de los microservicios y bases de datos. 
+* **Alternativa Descartada:** *Docker Swarm* y *k3s/Kubernetes*. Aunque ofrecen alta disponibilidad y características Cloud Native superiores, el *overhead* (consumo de CPU/RAM de los agentes y plano de control) de un clúster Kubernetes (incluso ligero como k3s) saturaría los 4 GB de RAM disponibles, dejando sin recursos a los microservicios y bases de datos.
+* **Consecuencias:** 
+  * (+) Máximo aprovechamiento de los recursos (RAM/CPU) para las cargas de trabajo reales.
+  * (+) Despliegue simple y reproducible.
+  * (-) Carencia de alta disponibilidad automática ante la caída del nodo físico; la autorrecuperación se limita al reinicio de contenedores dentro de la misma VM (mediante `restart: always`).
+
+---
+
+## ADR-009: Base de Datos por Servicio
+
+* **Estatus:** Aceptado.
+* **Contexto:** Los microservicios a extraer (búsqueda, auditoría, exportación) requieren persistencia propia para funcionar de manera independiente y escalar, evitando el acoplamiento al esquema actual de BookStack.
+* **Decisión:** Implementar el patrón **Database per Service**. Queda estrictamente prohibido que los microservicios (S1, S2, S3) realicen conexiones directas a la base de datos MariaDB del monolito. Cada microservicio tendrá su propia base de datos optimizada (ej. Meilisearch para S1, PostgreSQL/MongoDB para S2, Redis/MinIO para S3).
+* **Alternativa Descartada:** *Base de datos compartida (Shared Database)*. Se descartó porque acopla los servicios al esquema del monolito, impidiendo su evolución independiente, y genera un punto único de fallo y cuello de botella en el rendimiento.
+* **Consecuencias:** 
+  * (+) Autonomía total de los equipos y servicios; posibilidad de elegir la tecnología de datos adecuada para cada problema (PoliGlot Persistence).
+  * (-) Los datos estarán temporalmente duplicados y se requerirá sincronización asíncrona (eventual consistency) para mantener la integridad.
+
+---
+
+## ADR-010: Consistencia Eventual e Idempotencia
+
+* **Estatus:** Aceptado.
+* **Contexto:** Al separar las bases de datos (ADR-009) y usar un broker asíncrono, la actualización del índice de búsqueda y el registro de auditoría ocurren milisegundos o segundos después de la acción en el monolito.
+* **Decisión:** Adoptar un modelo de **Consistencia Eventual** para el sistema. Para manejar posibles reintentos de red y evitar datos duplicados, todos los consumidores deben ser **idempotentes**, basándose en un `event_id` único inyectado por el API Gateway o el `event-bridge`. Además, se implementará una **Dead Letter Queue (DLQ)** para enrutar los mensajes fallidos que no puedan procesarse tras varios intentos.
+* **Alternativa Descartada:** *Transacciones Distribuidas (Two-Phase Commit / 2PC)*. Se descartó por ser extremadamente complejo de implementar, bloquear recursos durante la transacción y degradar severamente el rendimiento y la disponibilidad del sistema (violando la rapidez requerida).
+* **Consecuencias:** 
+  * (+) Alta disponibilidad y baja latencia en la escritura principal (el usuario recibe respuesta inmediata sin esperar al índice).
+  * (+) Resiliencia ante fallos; los eventos fallidos no bloquean la cola principal.
+  * (-) Complejidad adicional en la lógica de los consumidores para garantizar la idempotencia.
