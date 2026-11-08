@@ -164,3 +164,10 @@ Los esquemas completos con códigos de respuesta (200, 202, 400, 404, 503) y el 
 * **Contrato de Búsqueda:** `cna/contracts/search-svc.openapi.yaml`
 * **Contrato de Exportación:** `cna/contracts/export-svc.openapi.yaml`
 * **Bus de Eventos:** `cna/contracts/events.asyncapi.yaml`
+
+---
+
+## Evidencia F5-E4: Validación de Contratos
+Ejecución del linter para validar que los archivos YAML no tienen errores sintácticos o de esquema.
+
+<img width="1024" height="484" alt="image" src="https://github.com/user-attachments/assets/dddb51d0-d74b-40f2-95fa-9d28925c7f01" />
