@@ -145,3 +145,58 @@ A continuación, se documentan las decisiones arquitectónicas para la extracci�
   * (+) Alta disponibilidad y baja latencia en la escritura principal (el usuario recibe respuesta inmediata sin esperar al índice).
   * (+) Resiliencia ante fallos; los eventos fallidos no bloquean la cola principal.
   * (-) Complejidad adicional en la lógica de los consumidores para garantizar la idempotencia.
+
+---
+
+# 4.3. A3 – Contratos de API y de Eventos
+
+## Política de Versionado
+Para garantizar la retrocompatibilidad y no romper a los consumidores existentes (el frontend u otros servicios):
+* **API REST:** Todas las nuevas rutas extraídas del monolito se exponen bajo el prefijo `/v2/` (ej. `/v2/search`, `/v2/export`).
+* **Eventos (Mensajería):** Todos los eventos asíncronos incluyen un campo `version` en su sobre (ej. `"version": "1.0"`).
+* **Transición a v3:** Si en el futuro se requiere un cambio disruptivo (breaking change), se desplegará una nueva ruta `/v3/` y los eventos se publicarán con `"version": "2.0"` (o en un nuevo canal). El API Gateway enrutará el tráfico antiguo a `/v2/` y el nuevo a `/v3/` simultáneamente hasta que todos los clientes migren, permitiendo una degradación elegante sin romper integraciones actuales.
+
+---
+
+## Contratos OpenAPI 3.1 (REST)
+
+Se ha creado un archivo por servicio en `cna/contracts/`. A continuación, se muestra el contrato representativo para el servicio de búsqueda (`search-svc`) y el de exportación (para ilustrar el código 202).
+
+### `cna/contracts/search-svc.openapi.yaml`
+```yaml
+openapi: 3.1.0
+info:
+  title: BookStack Search Service API
+  version: 2.0.0
+paths:
+  /v2/search:
+    get:
+      summary: Búsqueda de texto completo
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: X-Request-ID
+          in: header
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Resultados encontrados
+          content:
+            application/json:
+              example:
+                data:
+                  - id: 1
+                    title: "Página de ejemplo"
+                    url: "/books/docs/page/ejemplo"
+        '400':
+          description: Bad Request (Falta parámetro 'q')
+        '404':
+          description: Not Found
+        '503':
+          description: Service Unavailable (Error de conexión a Meilisearch)
