@@ -5,6 +5,7 @@
 ### Evidencia F5-E1: Inventario de módulos funcionales y tablas
 A continuación, se presenta la consulta a la base de datos (SQLite) que lista las tablas/colecciones de PocketBase mapeadas a sus respectivos módulos funcionales.
 
+<img width="1093" height="385" alt="image" src="https://github.com/user-attachments/assets/20517bb6-2f7d-44bd-b638-0ea952755abf" />
 
 
 ---
