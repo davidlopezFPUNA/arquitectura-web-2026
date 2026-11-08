@@ -6,6 +6,12 @@ paths:
   /v2/export/{page_id}:
     post:
       summary: Solicitar exportación asíncrona
+      parameters:
+        - name: page_id
+          in: path
+          required: true
+          schema:
+            type: string
       responses:
         '202':
           description: Accepted - Trabajo encolado
