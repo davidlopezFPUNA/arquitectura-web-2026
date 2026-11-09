@@ -31,10 +31,3 @@ C4Container
   Rel(export_svc, storage_ext, "Guarda archivos exportados", "S3 API / 9000")
 
 ---
-
-Recuerda abrirlo desde tu carpeta `cna/docs` ejecutando `nano c4-containers.md`, pegar el bloque, guardar con `Ctrl + O` -> `Enter` y salir con `Ctrl + X`.
-
-<ElicitationsGroup message="¿Pudiste guardar el archivo c4-containers.md?">
-  <Elicitation label="Ya está guardado" query="Listo, ya guardé c4-containers.md. ¿Cómo hacemos la última parte de diagramas de secuencia (F5-E7)?"/>
-  <Elicitation label="Subir a GitHub" query="Quiero hacer el git add, commit y push de la carpeta docs ahora."/>
-</ElicitationsGroup>
