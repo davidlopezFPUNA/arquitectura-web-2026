@@ -4,28 +4,30 @@
 C4Container
   title Diagrama de Contenedores de la Solucion (BookStack CNA)
 
-  Person(usuario, "Usuario Final", "Usuario interactuando via Web/API client.")
+  UpdateLayoutConfig($c4ShapeInRow="4", $c4BoundaryInRow="1")
+
+  Person(usuario, "Usuario Final", "Cliente Web/API")
 
   System_Boundary(cna_boundary, "Plataforma BookStack CNA") {
-    Container(gateway, "API Gateway / Nginx", "Nginx", "Ruteo de trafico, SSL termination y politicas de rate limit.", "Port: 80/443 (HTTP/HTTPS)")
-    Container(app_monolith, "BookStack Core", "PHP/Laravel", "Gestion principal de usuarios, paginas y permisos.", "Port: 8080 (HTTP)")
-    Container(search_svc, "Search Service", "Node.js / Express", "Microservicio de busqueda indexada y filtrado.", "Port: 3001 (HTTP/REST /v2/search)")
-    Container(export_svc, "Export Service", "Node.js / Worker", "Microservicio asincrono de generacion de reportes y exportaciones.", "Port: 3002 (HTTP/REST /v2/export)")
+    Container(gateway, "API Gateway", "Nginx", "Ruteo y SSL", "Port 80/443")
+    Container(app_monolith, "BookStack Core", "PHP/Laravel", "Gestion principal", "Port 8080")
+    Container(search_svc, "Search Service", "Node.js", "Busqueda indexada", "Port 3001")
+    Container(export_svc, "Export Service", "Node.js", "Exportaciones", "Port 3002")
     
-    ContainerDb(db_core, "Core Database", "MySQL 8.0", "Almacena contenido de paginas, usuarios y metadata.", "Port: 3306 (MySQL Protocol)")
-    ContainerDb(event_bus, "Message Broker / Event Bus", "RabbitMQ / Redpanda", "Bus de eventos asincronos para desacoplamiento.", "Port: 5672/9092 (AMQP/Kafka)")
+    ContainerDb(db_core, "Core Database", "MySQL 8.0", "Datos y usuarios", "Port 3306")
+    ContainerDb(event_bus, "Message Broker", "RabbitMQ", "Bus de eventos", "Port 5672")
   }
 
-  System_Ext(storage_ext, "Object Storage", "MinIO / S3", "Almacenamiento de exports y multimedia.")
+  System_Ext(storage_ext, "Object Storage", "MinIO / S3", "Archivos y PDFs")
 
-  Rel(usuario, gateway, "Envía peticiones", "HTTPS / 443")
-  Rel(gateway, app_monolith, "Rutera trafico legacy", "HTTP / 8080")
-  Rel(gateway, search_svc, "Rutera /v2/search", "HTTP / 3001")
-  Rel(gateway, export_svc, "Rutera /v2/export", "HTTP / 3002")
+  Rel(usuario, gateway, "Peticiones", "HTTPS")
+  Rel(gateway, app_monolith, "Legacy", "HTTP")
+  Rel(gateway, search_svc, "/v2/search", "HTTP")
+  Rel(gateway, export_svc, "/v2/export", "HTTP")
 
-  Rel(app_monolith, db_core, "Consulta y persiste datos", "TCP / 3306")
-  Rel(search_svc, db_core, "Consulta indices de busqueda", "TCP / 3306")
+  Rel(app_monolith, db_core, "Persistencia", "MySQL")
+  Rel(search_svc, db_core, "Consultas", "MySQL")
   
-  Rel(app_monolith, event_bus, "Publica eventos (bookstack.page.created, etc.)", "AMQP / 5672")
-  Rel(export_svc, event_bus, "Consume/Publica eventos (export.requested, export.completed)", "AMQP / 5672")
-  Rel(export_svc, storage_ext, "Guarda archivos exportados", "S3 API / 9000")
+  Rel(app_monolith, event_bus, "Publica eventos", "AMQP")
+  Rel(export_svc, event_bus, "Eventos export", "AMQP")
+  Rel(export_svc, storage_ext, "Guarda archivos", "S3 API")
