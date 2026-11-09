@@ -203,3 +203,10 @@ To                         Action      From
 --                         ------      ----
 22/tcp                     ALLOW IN    Anywhere
 Anywhere                   ALLOW IN    192.168.1.25
+```
+
+##@ F6-E3: Certificado X.509 con SAN
+```text
+X509v3 Subject Alternative Name:
+    DNS:bookstack.local, DNS:api.bookstack.local
+```
