@@ -1,6 +1,5 @@
 # C4 - Nivel 2: Diagrama de Contenedores (F5-E6)
 
-```mermaid
 C4Container
   title Diagrama de Contenedores de la Solucion (BookStack CNA)
 
