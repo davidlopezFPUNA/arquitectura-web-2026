@@ -293,7 +293,7 @@ Muestra la indexación inicial, la búsqueda de *"Docker"*, la reindexación sim
 
 Muestra el registro del primer evento enviado, el rechazo controlado del duplicado con estado `ignored_duplicate` y la verificación en la base de datos de auditoría.
 
-![Evidencia F6-E5](./evidencias/F6-E5-out1.jpg)
+![Evidencia F6-E5](./evidencias/F6-E5-out1.png)
 
 </details>
 
