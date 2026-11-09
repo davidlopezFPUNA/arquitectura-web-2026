@@ -269,3 +269,50 @@ location /api/media {
     proxy_set_header X-Request-ID $request_id;
     client_max_body_size 10M;
 }
+```
+
+---
+
+### 4. Evidencias Gráficas de Evaluación
+
+> **Ubicación de archivos:** Las evidencias capturadas con la salida de consola y los comandos ejecutados están almacenadas en [`evidencias/`](./evidencias/).
+
+<details open>
+<summary>📸 <b>Evidencia F6-E4: search-svc (Búsqueda pre y post edición)</b></summary>
+<br>
+
+Muestra la indexación inicial, la búsqueda de *"Docker"*, la reindexación simulando edición y la posterior búsqueda confirmando la actualización del contenido vía Gateway.
+
+![Evidencia F6-E4](./evidencias/F6-E4-out1.png)
+
+</details>
+
+<details open>
+<summary>📸 <b>Evidencia F6-E5: audit-svc (Idempotencia ante eventos duplicados)</b></summary>
+<br>
+
+Muestra el registro del primer evento enviado, el rechazo controlado del duplicado con estado `ignored_duplicate` y la verificación en la base de datos de auditoría.
+
+![Evidencia F6-E5](./evidencias/F6-E5-out1.jpg)
+
+</details>
+
+<details open>
+<summary>📸 <b>Evidencia F6-E6: export-svc (Ciclo de vida del Job asíncrono)</b></summary>
+<br>
+
+Muestra el ciclo de vida completo de la tarea asíncrona (`queued` $\rightarrow$ `running` $\rightarrow$ `done`) con la generación de la URL expirable de descarga.
+
+![Evidencia F6-E6](./evidencias/F6-E6-out1.png)
+
+</details>
+
+<details open>
+<summary>📸 <b>Evidencia F6-E8: media-svc (Subida multipart y generación de Thumbnail)</b></summary>
+<br>
+
+Muestra la subida del archivo de imagen, la emisión del evento `media.uploaded` y la descarga de la miniatura procesada a través del Gateway Nginx.
+
+![Evidencia F6-E8](./evidencias/F6-E8-out1.png)
+
+</details>
