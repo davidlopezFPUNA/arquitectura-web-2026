@@ -181,3 +181,25 @@ Para las APIs síncronas (REST), utilizamos versionado en la URI (ej. `/v2/searc
 Ejecución del linter para validar que los archivos YAML no tienen errores sintácticos o de esquema.
 
 <img width="1024" height="484" alt="image" src="https://github.com/user-attachments/assets/dddb51d0-d74b-40f2-95fa-9d28925c7f01" />
+
+---
+# Bloque II – Fase 6: Construcción, Contenerización y Despliegue Distribuido
+---
+
+# 5.1. B1 - Infraestructura Multi-Nodo
+
+## F6-E1: Estado de Docker Engine
+- **VM-1 (192.168.1.25):** Docker Engine y Plugin Compose operativos.
+- **VM-2 (192.168.1.26):** Docker Engine activo en nodo secundario.
+
+## F6-E2: Reglas UFW en VM-2
+```text
+Status: active
+Logging: on (low)
+Default: deny (incoming), allow (outgoing), disabled (routed)
+New profiles: skip
+
+To                         Action      From
+--                         ------      ----
+22/tcp                     ALLOW IN    Anywhere
+Anywhere                   ALLOW IN    192.168.1.25
