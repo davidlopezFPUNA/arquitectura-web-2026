@@ -189,24 +189,13 @@ Ejecución del linter para validar que los archivos YAML no tienen errores sint�
 # 5.1. B1 - Infraestructura Multi-Nodo
 
 ## F6-E1: Estado de Docker Engine
-- **VM-1 (192.168.1.25):** Docker Engine y Plugin Compose operativos.
-- **VM-2 (192.168.1.26):** Docker Engine activo en nodo secundario.
+### Nodo Principal (VM-1 - 192.168.1.25) - Nodo Secundario (VM-2 / nodo2 - 192.168.1.26)
+<img width="1455" height="1106" alt="image" src="https://github.com/user-attachments/assets/aab606a7-1c9b-4829-be31-240cd2d6954e" />
 
 ## F6-E2: Reglas UFW en VM-2
-```text
-Status: active
-Logging: on (low)
-Default: deny (incoming), allow (outgoing), disabled (routed)
-New profiles: skip
-
-To                         Action      From
---                         ------      ----
-22/tcp                     ALLOW IN    Anywhere
-Anywhere                   ALLOW IN    192.168.1.25
-```
+### Cortafuegos en VM-2 (Regla restrictiva desde VM-1)
+<img width="568" height="217" alt="image" src="https://github.com/user-attachments/assets/750ba32c-ec44-4b2f-a4df-67cb678853c5" />
 
 ## F6-E3: Certificado X.509 con SAN
-```text
-X509v3 Subject Alternative Name:
-    DNS:bookstack.local, DNS:api.bookstack.local
-```
+Inspección del nuevo certificado X.509 donde se confirma la inclusión de ambas entradas DNS en el campo **Subject Alternative Name (SAN)** (`bookstack.local` y `api.bookstack.local`).
+<img width="1138" height="78" alt="image" src="https://github.com/user-attachments/assets/527769b9-92d9-4f9b-a9ff-b29832551a3d" />
