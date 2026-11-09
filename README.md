@@ -167,6 +167,16 @@ Los esquemas completos con códigos de respuesta (200, 202, 400, 404, 503) y el 
 
 ---
 
+## Política de Versionado (Punto A3)
+
+Para las APIs síncronas (REST), utilizamos versionado en la URI (ej. `/v2/search`). Para los eventos asíncronos, utilizamos el campo `version` dentro del sobre del evento.
+
+**¿Cómo agregar una versión v3 sin romper a los consumidores actuales?**
+* **APIs REST:** Se creará un nuevo prefijo de ruta `/v3/` para los endpoints con cambios que rompan compatibilidad. Los endpoints `/v2/` seguirán funcionando en paralelo durante un periodo de transición, permitiendo a los clientes migrar a su propio ritmo.
+* **Eventos Asíncronos:** Los nuevos eventos se publicarán con el campo `"version": "3"` en el sobre. Los consumidores existentes que esperan la versión "2" deben estar programados para ignorar versiones desconocidas, o el publicador puede emitir temporalmente ambas versiones en canales separados.
+
+---
+
 ## Evidencia F5-E4: Validación de Contratos
 Ejecución del linter para validar que los archivos YAML no tienen errores sintácticos o de esquema.
 
