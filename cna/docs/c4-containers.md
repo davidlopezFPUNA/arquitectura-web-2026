@@ -1,33 +1,39 @@
 # C4 - Nivel 2: Diagrama de Contenedores (F5-E6)
 
 ```mermaid
-C4Container
-  title Diagrama de Contenedores de la Solucion (BookStack CNA)
+flowchart TD
+    classDef person fill:#08427b,stroke:#073b6f,color:#fff,stroke-width:2px;
+    classDef container fill:#438dd5,stroke:#3c7fc0,color:#fff,stroke-width:2px;
+    classDef db fill:#2b7dbd,stroke:#246ba3,color:#fff,stroke-width:2px;
+    classDef external fill:#999999,stroke:#666666,color:#fff,stroke-width:2px;
 
-  UpdateLayoutConfig($c4ShapeInRow="4", $c4BoundaryInRow="1")
-
-  Person(usuario, "Usuario Final", "Cliente Web/API")
-
-  System_Boundary(cna_boundary, "Plataforma BookStack CNA") {
-    Container(gateway, "API Gateway", "Nginx", "Ruteo y SSL", "Port 80/443")
-    Container(app_monolith, "BookStack Core", "PHP/Laravel", "Gestion principal", "Port 8080")
-    Container(search_svc, "Search Service", "Node.js", "Busqueda indexada", "Port 3001")
-    Container(export_svc, "Export Service", "Node.js", "Exportaciones", "Port 3002")
+    U["👤 <b>Usuario Final</b><br/>[Person]<br/>Cliente Web / API"]:::person
     
-    ContainerDb(db_core, "Core Database", "MySQL 8.0", "Datos y usuarios", "Port 3306")
-    ContainerDb(event_bus, "Message Broker", "RabbitMQ", "Bus de eventos", "Port 5672")
-  }
+    subgraph CNA ["<b>Plataforma BookStack CNA</b>"]
+        GW["<b>API Gateway</b><br/>[Nginx]<br/>Ruteo y SSL (Port 80/443)"]:::container
+        CORE["<b>BookStack Core</b><br/>[PHP / Laravel]<br/>Gestión principal (Port 8080)"]:::container
+        SEARCH["<b>Search Service</b><br/>[Node.js / Express]<br/>Búsqueda indexada (Port 3001)"]:::container
+        EXPORT["<b>Export Service</b><br/>[Node.js / Worker]<br/>Exportaciones (Port 3002)"]:::container
+        
+        DB[("<b>Core Database</b><br/>[MySQL 8.0]<br/>Datos y usuarios (Port 3306)")]:::db
+        BUS[("<b>Message Broker</b><br/>[RabbitMQ]<br/>Bus de eventos (Port 5672)")]:::db
+    end
 
-  System_Ext(storage_ext, "Object Storage", "MinIO / S3", "Archivos y PDFs")
+    S3["<b>Object Storage</b><br/>[MinIO / S3]<br/>Archivos y PDFs"]:::external
 
-  Rel(usuario, gateway, "Peticiones", "HTTPS")
-  Rel(gateway, app_monolith, "Legacy", "HTTP")
-  Rel(gateway, search_svc, "/v2/search", "HTTP")
-  Rel(gateway, export_svc, "/v2/export", "HTTP")
+    %% Relaciones de Entrada
+    U -->|HTTPS / 443| GW
 
-  Rel(app_monolith, db_core, "Persistencia", "MySQL")
-  Rel(search_svc, db_core, "Consultas", "MySQL")
-  
-  Rel(app_monolith, event_bus, "Publica eventos", "AMQP")
-  Rel(export_svc, event_bus, "Eventos export", "AMQP")
-  Rel(export_svc, storage_ext, "Guarda archivos", "S3 API")
+    %% Ruteo desde Gateway
+    GW -->|HTTP / Legacy| CORE
+    GW -->|HTTP / /v2/search| SEARCH
+    GW -->|HTTP / /v2/export| EXPORT
+
+    %% Acceso a Datos
+    CORE -->|MySQL / 3306| DB
+    SEARCH -->|MySQL / 3306| DB
+
+    %% Eventos y Almacenamiento
+    CORE -->|AMQP / Publish| BUS
+    EXPORT -->|AMQP / Consume-Publish| BUS
+    EXPORT -->|S3 API / 9000| S3
