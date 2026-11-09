@@ -1,5 +1,6 @@
 # C4 - Nivel 2: Diagrama de Contenedores (F5-E6)
 
+```mermaid
 C4Container
   title Diagrama de Contenedores de la Solucion (BookStack CNA)
 
@@ -28,5 +29,3 @@ C4Container
   Rel(app_monolith, event_bus, "Publica eventos (bookstack.page.created, etc.)", "AMQP / 5672")
   Rel(export_svc, event_bus, "Consume/Publica eventos (export.requested, export.completed)", "AMQP / 5672")
   Rel(export_svc, storage_ext, "Guarda archivos exportados", "S3 API / 9000")
-
----
