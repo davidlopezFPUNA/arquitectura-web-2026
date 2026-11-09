@@ -205,7 +205,7 @@ To                         Action      From
 Anywhere                   ALLOW IN    192.168.1.25
 ```
 
-##@ F6-E3: Certificado X.509 con SAN
+## F6-E3: Certificado X.509 con SAN
 ```text
 X509v3 Subject Alternative Name:
     DNS:bookstack.local, DNS:api.bookstack.local
