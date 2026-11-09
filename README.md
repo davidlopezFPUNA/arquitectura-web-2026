@@ -199,3 +199,73 @@ Ejecución del linter para validar que los archivos YAML no tienen errores sint�
 ## F6-E3: Certificado X.509 con SAN
 Inspección del nuevo certificado X.509 donde se confirma la inclusión de ambas entradas DNS en el campo **Subject Alternative Name (SAN)** (`bookstack.local` y `api.bookstack.local`).
 <img width="1138" height="78" alt="image" src="https://github.com/user-attachments/assets/527769b9-92d9-4f9b-a9ff-b29832551a3d" />
+
+## 5.2. B2 – Microservicios (Python con FastAPI)
+
+Se implementó una arquitectura distribuida donde el Gateway (Nginx) se ejecuta en **VM-1** (`192.168.1.25`) y los 4 microservicios aislados en contenedores Docker residen en **VM-2** (`192.168.1.26`).
+
+---
+
+### 1. Requisitos Transversales Cumplidos
+
+- **Configuración por variables de entorno:** Sin secretos o credenciales embebidas en las imágenes Docker.
+- **Sin estado local (Stateless):** Los contenedores pueden destruirse y recrearse sin pérdida de datos persistentes.
+- **Observabilidad & Health:** Endpoints `/healthz` (liveness) y `/readyz` (readiness) independientes por servicio.
+- **Métricas Prometheus:** Endpoint `/metrics` que expone contadores HTTP (`http_requests_total`) e histogramas de latencia (`http_request_duration_seconds`).
+- **Logs Estructurados:** Salida JSON a `stdout` incluyendo `timestamp`, `level`, `service`, `request_id` y `message`.
+- **Trazabilidad:** Propagación transversal del encabezado `X-Request-ID` desde Nginx (Gateway) hacia cada microservicio.
+- **Pruebas Automatizadas:** Suites de pruebas unitarias/contrato ejecutables con Pytest.
+
+---
+
+### 2. Matriz de Servicios y Evidencias de Evaluación
+
+| Sub-ítem | Microservicio | Puerto (VM-2) | Endpoint Ruteado (VM-1 Gateway) | Evidencia | Descripción de la Evidencia Validada |
+| :--- | :--- | :---: | :--- | :---: | :--- |
+| **B2.1** | `search-svc` | `8000` | `https://192.168.1.25/api/search`<br>`https://192.168.1.25/api/index` | **F6-E4** | Búsqueda vía Gateway antes y después de simular la edición/reindexación de una página en el monolito. |
+| **B2.2** | `audit-svc` | `8001` | `https://192.168.1.25/api/audit` | **F6-E5** | Verificación de idempotencia: el mismo `event_id` enviado consecutivamente genera un solo registro (`ignored_duplicate`). |
+| **B2.3** | `export-svc` | `8002` | `https://192.168.1.25/api/export` | **F6-E6** | Monitoreo del ciclo de vida asíncrono de un job con `curl` (`202 Accepted` $\rightarrow$ `queued` $\rightarrow$ `running` $\rightarrow$ `done` con URL expirable de MinIO). |
+| **B2.4** | `media-svc` | `8003` | `https://192.168.1.25/api/media` | **F6-E8** | Subida multipart de imagen, procesamiento de thumbnail en segundo plano y descarga directa de la miniatura a través del Gateway. |
+
+---
+
+### 3. Estructura del Enrutamiento en Nginx (Gateway VM-1)
+
+```nginx
+# Configuraciones de ruteo añadidas en /etc/nginx/sites-available/default
+
+location /api/search {
+    proxy_pass [http://192.168.1.26:8000/api/search](http://192.168.1.26:8000/api/search);
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Request-ID $request_id;
+}
+
+location /api/index {
+    proxy_pass [http://192.168.1.26:8000/api/index](http://192.168.1.26:8000/api/index);
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Request-ID $request_id;
+}
+
+location /api/audit {
+    proxy_pass [http://192.168.1.26:8001/api/audit](http://192.168.1.26:8001/api/audit);
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Request-ID $request_id;
+}
+
+location /api/export {
+    proxy_pass [http://192.168.1.26:8002/api/export](http://192.168.1.26:8002/api/export);
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Request-ID $request_id;
+}
+
+location /api/media {
+    proxy_pass [http://192.168.1.26:8003/api/media](http://192.168.1.26:8003/api/media);
+    proxy_set_header Host $host;
+    proxy_set_header X-Real-IP $remote_addr;
+    proxy_set_header X-Request-ID $request_id;
+    client_max_body_size 10M;
+}
