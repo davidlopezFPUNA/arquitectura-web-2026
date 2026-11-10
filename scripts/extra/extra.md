@@ -8,40 +8,72 @@ Se inspeccionó la base de datos embebida SQLite de PocketBase (`data.db`) ejecu
 
 ---
 
-### Evidencia F5-E2: Matriz de Acoplamiento
+### Matriz de Acoplamiento Módulo × Tabla (Evidencia F5-E2)
 
-A continuación se detalla la matriz de dependencia entre módulos funcionales y tablas del motor SQLite, identificando las tablas compartidas que representan acoplamiento directo en la arquitectura actual:
+Dado que la arquitectura base utiliza PocketBase (SQLite), el acoplamiento se evalúa entre los servicios lógicos consumidos y las colecciones internas del motor. Las tablas compartidas o de uso cruzado determinan la complejidad de extracción hacia nuevos servicios.
 
-| Tabla / Módulo | Usuarios / Permisos | Colecciones / Contenido | Parámetros Globales | Migraciones | ¿Tabla Compartida / Acoplada? |
-| :--- | :---: | :---: | :---: | :---: | :---: |
-| `_admins` | X | | | | No |
-| `users` | X | X (Relación con contactos) | | | Sí (Acoplada) |
-| `_collections` | | X | | | No |
-| `contactos` | | X | | | No |
-| `_externalAuths` | X | | | | No |
-| `_params` | X | X | X | | Sí (Global) |
-| `_migrations` | | | | X | No |
-
-> **Nota de Acoplamiento:** Las tablas `users` y `_params` actúan como puntos de acoplamiento fuerte en el monolito, ya que la gestión de datos (`contactos`) depende directamente del modelo de usuarios y las configuraciones globales del sistema.
+| Módulo / Servicio Lógico | Colección / Tabla (PocketBase) | Operaciones (CRUD) | Nivel de Acoplamiento | Justificación del Acoplamiento |
+| :--- | :--- | :--- | :--- | :--- |
+| **Módulo de Autenticación** | `users`, `_admins` | Lectura (R), Actualización (U) | **Alto** | El servicio de inicio de sesión depende estrictamente de la validación contra estas tablas mediante la API nativa. |
+| **Integraciones Sociales** | `_externalAuths` | Creación (C), Lectura (R) | **Medio** | Se acopla solo si se habilita el inicio de sesión con proveedores externos (Google, GitHub, etc.). |
+| **Módulo de Formularios / CRM** | `contactos` | Creación (C), Lectura (R), Actualización (U), Borrado (D) | **Alto** | La interfaz de usuario que captura o lista contactos realiza peticiones REST/Realtime directamente hacia esta colección. |
+| **Core (PocketBase Engine)** | `_collections`, `_migrations`, `_params` | Todas (CRUD) | **Alto (Interno)** | Son tablas de configuración estrictamente acopladas al motor interno de PocketBase para definir el esquema y estado de la base de datos. |
 
 ---
 
 ### Mapa de Contextos / DDD (Evidencia F5-E3)
 
-El diseño del Mapa de Contextos (Bounded Contexts) bajo Domain-Driven Design para el desacoplamiento del monolito se estructura de la siguiente manera:
+El siguiente mapa de contextos ilustra las relaciones entre el monolito original y los nuevos *Bounded Contexts* (microservicios S1, S2, S3) extraídos mediante el patrón *Strangler Fig*, destacando el `event-bridge` como Capa Anticorrupción (ACL) para desacoplar la emisión de webhooks.
 
-+------------------------------------+          +------------------------------------+
-|   Contexto: Autenticación / User   |          |      Contexto: Almacenamiento      |
-|              (Auth-SVC)            |          |           (Storage-SVC)            |
-+------------------------------------+          +------------------------------------+
-^                                       ^
-| (Cliente / Proveedor)                 | (ACL / Permisos)
-v                                       v
-+------------------------------------------------------------------------------------+
-|                        Contexto Core: Datos / Contactos                            |
-|                                  (PocketBase Core)                                 |
-+------------------------------------------------------------------------------------+
+```mermaid
+flowchart TD
+    %% Definición de Estilos
+    classDef monolito fill:#f9d0c4,stroke:#333,stroke-width:2px;
+    classDef servicio fill:#d4e6f1,stroke:#333,stroke-width:2px;
+    classDef infra fill:#e8daef,stroke:#333,stroke-width:2px;
 
+    %% Monolito Original
+    subgraph Contexto_Monolito [Monolito Bounded Context]
+        PB[PocketBase / Monolito]:::monolito
+        DB[(SQLite)]:::monolito
+        PB --- DB
+    end
+
+    %% Capa de Mensajería y ACL
+    subgraph Mensajeria [Bus de Eventos]
+        EB[event-bridge : Capa Anticorrupción]:::infra
+        Broker[Broker: NATS / RabbitMQ]:::infra
+        EB -- Publica Eventos --> Broker
+    end
+
+    %% Microservicios Extraídos
+    subgraph Contexto_Búsqueda [Búsqueda - S1]
+        S1_API[search-svc]:::servicio
+        S1_DB[(Meilisearch)]:::servicio
+        S1_API --- S1_DB
+    end
+
+    subgraph Contexto_Auditoría [Auditoría - S2]
+        S2_API[audit-svc]:::servicio
+        S2_DB[(PostgreSQL)]:::servicio
+        S2_API --- S2_DB
+    end
+
+    subgraph Contexto_Exportación [Exportación - S3]
+        S3_API[export-svc]:::servicio
+        S3_DB[(Redis + MinIO)]:::servicio
+        S3_API --- S3_DB
+    end
+
+    %% Relaciones Asíncronas (Eventos)
+    PB -- "Webhooks (Proveedor)" --> EB
+    Broker -- "Consume Eventos (Cliente)" --> S1_API
+    Broker -- "Consume Eventos (Cliente)" --> S2_API
+
+    %% Relaciones Síncronas (REST)
+    S1_API -- "Consulta (Cliente/Proveedor)" --> PB
+    S3_API -- "Consulta (Cliente/Proveedor)" --> PB
+```
 ---
 
 ### 5.3. B3 – Contenerización con Buenas Prácticas
