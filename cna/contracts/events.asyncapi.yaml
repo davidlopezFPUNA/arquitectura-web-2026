@@ -1,71 +1,82 @@
-asyncapi: 3.0.0
+asyncapi: '3.0.0'
 info:
-  title: BookStack Event Bus
-  version: 1.0.0
+  title: Bus de Eventos PocketBase - Ecosistema FPUNA
+  version: '1.0.0'
+  description: Canales de eventos para integracion asincrona del monolito PocketBase.
+
 channels:
-  bookstack.page.created:
-    address: 'bookstack.page.created'
+  pocketbaseContactCreated:
+    address: pocketbase.contact.created
     messages:
-      publish:
-        $ref: '#/components/messages/StandardEvent'
-  bookstack.page.updated:
-    address: 'bookstack.page.updated'
+      contactCreated:
+        $ref: '#/components/messages/ContactCreatedMessage'
+
+  pocketbaseContactUpdated:
+    address: pocketbase.contact.updated
     messages:
-      publish:
-        $ref: '#/components/messages/StandardEvent'
-  bookstack.page.deleted:
-    address: 'bookstack.page.deleted'
+      contactUpdated:
+        $ref: '#/components/messages/ContactUpdatedMessage'
+
+  pocketbaseContactDeleted:
+    address: pocketbase.contact.deleted
     messages:
-      publish:
-        $ref: '#/components/messages/StandardEvent'
-  export.requested:
-    address: 'export.requested'
+      contactDeleted:
+        $ref: '#/components/messages/ContactDeletedMessage'
+
+  exportRequested:
+    address: export.requested
     messages:
-      publish:
-        $ref: '#/components/messages/StandardEvent'
-  export.completed:
-    address: 'export.completed'
+      exportReq:
+        $ref: '#/components/messages/ExportRequestedMessage'
+
+  exportCompleted:
+    address: export.completed
     messages:
-      publish:
-        $ref: '#/components/messages/StandardEvent'
-  media.uploaded:
-    address: 'media.uploaded'
+      exportComp:
+        $ref: '#/components/messages/ExportCompletedMessage'
+
+  mediaUploaded:
+    address: media.uploaded
     messages:
-      publish:
-        $ref: '#/components/messages/StandardEvent'
+      mediaUp:
+        $ref: '#/components/messages/MediaUploadedMessage'
 
 components:
   messages:
-    StandardEvent:
-      name: StandardEventEnvelope
+    ContactCreatedMessage:
+      name: ContactCreatedMessage
+      title: Evento de Creacion de Contacto
       payload:
         type: object
-        required:
-          - event_id
-          - type
-          - version
-          - occurred_at
-          - request_id
-          - payload
         properties:
-          event_id:
-            type: string
-            format: uuid
-            description: Identificador único del evento para idempotencia.
-          type:
-            type: string
-            example: "bookstack.page.updated"
-          version:
-            type: string
-            example: "1.0"
-          occurred_at:
-            type: string
-            format: date-time
-            description: Timestamp ISO 8601
-          request_id:
-            type: string
-            format: uuid
-            description: ID de trazabilidad originado en el API Gateway.
-          payload:
-            type: object
-            description: Datos específicos del evento (ej. atributos de la página).
+          event_id: { type: string, format: uuid }
+          type: { type: string, example: "pocketbase.contact.created" }
+          version: { type: string, example: "1.0.0" }
+          occurred_at: { type: string, format: date-time }
+          request_id: { type: string }
+          payload: { type: object }
+
+    ContactUpdatedMessage:
+      name: ContactUpdatedMessage
+      payload:
+        type: object
+
+    ContactDeletedMessage:
+      name: ContactDeletedMessage
+      payload:
+        type: object
+
+    ExportRequestedMessage:
+      name: ExportRequestedMessage
+      payload:
+        type: object
+
+    ExportCompletedMessage:
+      name: ExportCompletedMessage
+      payload:
+        type: object
+
+    MediaUploadedMessage:
+      name: MediaUploadedMessage
+      payload:
+        type: object
