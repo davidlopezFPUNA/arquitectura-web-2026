@@ -1,36 +1,51 @@
 openapi: 3.1.0
 info:
-  title: BookStack Search Service API
+  title: Search Service API - PocketBase Ecosystem
   version: 2.0.0
+  description: Microservicio de busqueda optimizada desacoplado de PocketBase.
+  contact:
+    name: Soporte FPUNA
+    email: soporte@fpuna.edu.py
+
+servers:
+  - url: http://localhost:8080
+    description: Servidor Local de Desarrollo
+
+tags:
+  - name: Search
+    description: Operaciones de busqueda sobre el indice
+
 paths:
   /v2/search:
     get:
-      summary: Búsqueda de texto completo
+      summary: Buscar contactos en el indice
+      description: Endpoint para consultar el indice de busqueda de contactos desacoplado de PocketBase.
+      operationId: searchContacts
+      tags:
+        - Search
       parameters:
         - name: q
           in: query
           required: true
           schema:
             type: string
-        - name: X-Request-ID
-          in: header
-          required: true
-          schema:
-            type: string
-            format: uuid
       responses:
         '200':
-          description: Resultados encontrados
+          description: Busqueda exitosa
           content:
             application/json:
-              example:
-                data:
-                  - id: 1
-                    title: "Página de ejemplo"
-                    url: "/books/docs/page/ejemplo"
+              schema:
+                type: object
+                properties:
+                  total: { type: integer, example: 1 }
+                  results:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id: { type: string, example: "abc123contact" }
+                        nombre: { type: string, example: "Juan Pérez" }
         '400':
-          description: Bad Request (Falta parámetro 'q')
-        '404':
-          description: Not Found
+          description: Parametros de busqueda invalidos
         '503':
-          description: Service Unavailable (Error de conexión a Meilisearch)
+          description: Servicio de busqueda no disponible temporalmente
