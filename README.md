@@ -1,3 +1,25 @@
+# Proyecto Integrador II — De monolito a Cloud Native
+
+**Estudiantes:** David López, Junior Legal  
+**Institución:** Facultad Politécnica - Universidad Nacional de Asunción (FPUNA)  
+**Sistema Operativo:** Ubuntu Server 24.04.4 LTS (x86_64)  
+**Infraestructura:** VirtualBox (2 vCPU, 2 GB RAM, 20 GB Disk)  
+
+---
+
+## Entrega 2. Evolución de la Infraestructura y Actualizaciones
+
+| Criterio | Detalle |
+| :--- | :--- |
+| **Nombre** | PocketBase |
+| **Repositorio Oficial** | [ganigeorgiev.com/pocketbase/pocketbase/releases](https://ganigeorgiev.com/pocketbase/pocketbase/releases) |
+| **Versión Instalada / Actualizada** | `v0.22.58` |
+| **Licencia** | MIT License |
+| **Lenguaje / Framework** | Go (Golang) |
+| **Servidor de Aplicación** | HTTPS Server embebido en Go |
+| **Base de Datos** | SQLite (embebida en archivo local) |
+| **Puertos Previstos** | `8090` (PocketBase Backend) / `80` (Nginx Reverse Proxy) |
+---
 # Bloque I – Fase 5: Diseño y Descomposición del Monolito
 
 ## 4.1. A1 – Análisis del Monolito y Mapa de Contextos
