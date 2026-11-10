@@ -1,22 +1,39 @@
 openapi: 3.1.0
 info:
-  title: BookStack Export Service API
+  title: Export Service API - PocketBase Ecosystem
   version: 2.0.0
+  description: Microservicio de exportacion asincrona desacoplado de PocketBase.
+  contact:
+    name: Soporte FPUNA
+    email: soporte@fpuna.edu.py
+
+servers:
+  - url: http://localhost:8081
+    description: Servidor Local de Desarrollo
+
+tags:
+  - name: Export
+    description: Operaciones de exportacion de datos
+
 paths:
-  /v2/export/{page_id}:
+  /v2/export:
     post:
-      summary: Solicitar exportación asíncrona
-      parameters:
-        - name: page_id
-          in: path
-          required: true
-          schema:
-            type: string
+      summary: Solicitar exportacion de datos
+      description: Endpoint para solicitar la generacion de reportes de contactos desde PocketBase.
+      operationId: requestExport
+      tags:
+        - Export
       responses:
         '202':
-          description: Accepted - Trabajo encolado
+          description: Solicitud de exportacion aceptada y en proceso
           content:
             application/json:
-              example:
-                job_id: "123e4567-e89b-12d3-a456-426614174000"
-                status: "pending"
+              schema:
+                type: object
+                properties:
+                  job_id: { type: string, example: "job-12345" }
+                  status: { type: string, example: "PROCESSING" }
+        '400':
+          description: Parametros de solicitud invalidos
+        '503':
+          description: Servicio de exportacion no disponible temporalmente
