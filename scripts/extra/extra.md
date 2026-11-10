@@ -176,8 +176,6 @@ Se ejecutó la validación del contrato OpenAPI utilizando la herramienta **Spec
 
 # C4 - Nivel 1: Diagrama de Contexto (F5-E5)
 
-# C4 - Nivel 1: Diagrama de Contexto (F5-E5)
-
 ```mermaid
 graph TD
     Client["Cliente / Host Windows"]
@@ -189,6 +187,135 @@ graph TD
 
     Client -->|Petición HTTP - Puerto 80| App
     Admin -->|Admin UI - Puerto 80/8090| App
+```
+
+## C4 - Nivel 2: Diagrama de Contenedores (F5-E6)
+
+```mermaid
+graph TB
+    Client["[ Cliente / Host Windows ]"]
+    
+    subgraph Network["[ Adaptador Puente / Red 192.168.1.0/27 ]"]
+        Proxy["[ Servidor Web: Nginx Proxy (Puerto 80) ]"]
+    end
+
+    subgraph DockerHost["VM Ubuntu Server 24.04 (VirtualBox - 2 vCPU / 2 GB RAM)"]
+        subgraph Monolith["Monolito Base"]
+            PB["[ Aplicación: PocketBase Service (Puerto 8090) ]"]
+            SQLite[(" [ Base de Datos: SQLite ]<br>(Archivo embebido en disco / pb_data) ")]
+        end
+
+        subgraph EventBus["Bus de Eventos"]
+            Bridge["[ Event Bridge / Webhook Handler ]"]
+            NATS["[ Broker: NATS JetStream (Puerto 4222) ]"]
+        end
+
+        subgraph Services["Microservicios Desacoplados"]
+            SearchSVC["[ Microservicio: Search Service (Puerto 8080) ]"]
+            ExportSVC["[ Microservicio: Export Service (Puerto 8081) ]"]
+            SearchDB[(" [ Index Storage (Local) ] ")]
+            ExportDB[(" [ Temp Storage (Volume) ] ")]
+        end
+    end
+
+    Client -->|Petición HTTP - Puerto 80| Proxy
+    Proxy -->|Redirección local 127.0.0.1:8090| PB
+    PB --- SQLite
+
+    Proxy -->|Redirección local 127.0.0.1:8080| SearchSVC
+    Proxy -->|Redirección local 127.0.0.1:8081| ExportSVC
+
+    PB -->|Webhooks HTTP| Bridge
+    Bridge -->|Publicar Eventos / TCP 4222| NATS
+
+    NATS -->|Suscripción: pocketbase.contact.*| SearchSVC
+    NATS -->|Suscripción: export.requested| ExportSVC
+
+    SearchSVC --- SearchDB
+    ExportSVC --- ExportDB
+```
+
+## Diagramas de Secuencia (F5-E7)
+
+### 1. Sincronización Eventual de Contactos (Creación / Actualización)
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor C as Cliente / Host Windows
+    participant Proxy as Nginx Proxy (:80)
+    participant PB as PocketBase (:8090)
+    participant EB as Event Bridge
+    participant NATS as NATS JetStream
+    participant SS as Search Service
+
+    C->>Proxy: POST /api/collections/contactos/records
+    Proxy->>PB: Redirección local 127.0.0.1:8090
+    alt Camino Exitoso
+        PB-->>PB: Persistir en SQLite (pb_data)
+        PB-->>C: 201 Created
+        PB->>EB: Webhook HTTP (pocketbase.contact.created)
+        EB->>NATS: Publicar "pocketbase.contact.created" (event_id: UUID)
+        NATS->>SS: Entregar Evento
+        SS->>SS: Indexar contacto en almacenamiento local
+    else Camino de Error (Fallo en Broker de Eventos)
+        PB-->>C: 201 Created (Monolito asegura la persistencia)
+        PB->>EB: Webhook HTTP
+        EB->>NATS: Publicar Evento
+        NATS--xEB: Error de Conexión / NATS Down
+        EB->>EB: Almacenar en Cola Reintentos / DLQ Local
+    end
+```
+
+### 2. Búsqueda Desacoplada de Contactos
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor C as Cliente / Host Windows
+    participant Proxy as Nginx Proxy (:80)
+    participant SS as Search Service (:8080)
+
+    C->>Proxy: GET /v2/search?q=Juan
+    Proxy->>SS: Redirección local 127.0.0.1:8080
+    alt Camino Exitoso
+        SS->>SS: Consultar índice desacoplado
+        SS-->>C: 200 OK { total: 1, results: [...] }
+    else Camino de Error (Parámetro Inválido)
+        SS-->>C: 400 Bad Request { error: "Parámetro 'q' requerido" }
+    else Camino de Error (Servicio No Disponible)
+        SS-->>C: 503 Service Unavailable { error: "Motor de búsqueda fuera de línea" }
+    end
+```
+
+### 3. Exportación Asíncrona de Datos
+
+```mermaid
+sequenceDiagram
+    autonumber
+    actor C as Cliente / Host Windows
+    participant Proxy as Nginx Proxy (:80)
+    participant ES as Export Service (:8081)
+    participant NATS as NATS JetStream
+    participant PB as PocketBase API
+
+    C->>Proxy: POST /v2/export { format: "csv" }
+    Proxy->>ES: Redirección local 127.0.0.1:8081
+    alt Camino Exitoso
+        ES-->>C: 202 Accepted { job_id: "job-101", status: "PROCESSING" }
+        ES->>NATS: Publicar "export.requested"
+        NATS->>ES: Consumir evento
+        ES->>PB: GET /api/collections/contactos/records
+        PB-->>ES: 200 OK (Datos desde SQLite)
+        ES->>ES: Generar archivo CSV
+        ES->>NATS: Publicar "export.completed"
+    else Camino de Error (Error / Timeout en Monolito)
+        ES-->>C: 202 Accepted { job_id: "job-101", status: "PROCESSING" }
+        ES->>PB: GET /api/collections/contactos/records
+        PB--xES: 500 Internal Error / Timeout
+        ES->>NATS: Publicar "export.failed"
+        ES->>ES: Registrar fallo en logs de auditoría
+    end
 ```
 
 ---
