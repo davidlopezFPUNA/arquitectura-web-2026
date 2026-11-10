@@ -170,10 +170,7 @@ Los esquemas completos con esquemas de datos, códigos de respuesta (200, 202, 4
 
 Se ejecutó la validación del contrato OpenAPI utilizando la herramienta **Spectral** dentro del repositorio local en la máquina virtual:
 
-```bash
-cd ~/arquitectura-web-2026/cna/contracts
-npx @stoplight/spectral-cli lint search-svc.openapi.yaml
-```
+<img width="1114" height="38" alt="image" src="https://github.com/user-attachments/assets/1bb103a7-21e3-4973-b4b7-9b2c9fc6da20" />
 
 ---
 
