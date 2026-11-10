@@ -1,3 +1,11 @@
+## 4.1. A1 – Análisis del Monolito y Mapa de Contextos
+
+### Inventario de Módulos Funcionales y Tablas (Evidencia F5-E1)
+
+Se inspeccionó la base de datos embebida SQLite de PocketBase (`data.db`) ejecutando la consulta sobre la tabla maestra `sqlite_master`:
+
+<img width="1113" height="149" alt="image" src="https://github.com/user-attachments/assets/d34b35e1-c2bc-4500-bd2d-83e474527ada" />
+
 ---
 
 ### 5.3. B3 – Contenerización con Buenas Prácticas
