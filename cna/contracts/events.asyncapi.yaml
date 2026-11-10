@@ -3,6 +3,21 @@ info:
   title: Bus de Eventos PocketBase - Ecosistema FPUNA
   version: '1.0.0'
   description: Canales de eventos para integracion asincrona del monolito PocketBase.
+  contact:
+    name: Soporte FPUNA
+    url: https://www.pol.una.py
+    email: soporte@fpuna.edu.py
+  license:
+    name: MIT
+  tags:
+    - name: PocketBase
+      description: Canales de eventos emitidos desde el monolito
+
+servers:
+  nats:
+    host: localhost:4222
+    protocol: nats
+    description: Broker NATS JetStream para la gestion de eventos
 
 channels:
   pocketbaseContactCreated:
