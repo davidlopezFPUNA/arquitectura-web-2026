@@ -372,19 +372,22 @@ Se ha configurado una infraestructura distribuida compuesta por dos máquinas vi
 
 ---
 
-### Evidencias de Despliegue
+# Bloque II – Fase 6: Construcción, Contenerización y Despliegue Distribuido
+---
+
+# 5.1. B1 - Infraestructura Multi-Nodo
 
 #### 1. Evidencia F6-E1: Inspección de Recursos y Docker Engine (VM-1 / VM-2)
 Confirmación del entorno de ejecucion Docker en los nodos distribuidos (2 vCPU, 2 GB RAM, Kernel Linux 6.8):
 
 <img width="732" height="1115" alt="image" src="https://github.com/user-attachments/assets/38342093-6c3a-420a-aa4b-878bfbe4d28f" />
 
-####2. Evidencia F6-E2: Reglas de Firewall UFW por Nodo (VM-2)
+#### 2. Evidencia F6-E2: Reglas de Firewall UFW por Nodo (VM-2)
 Aislamiento estricto de seguridad en VM-2: los puertos internos de los microservicios (8080/tcp, 8081/tcp) y del bus NATS (4222/tcp) únicamente aceptan peticiones originadas desde la dirección IP de VM-1 (192.168.1.25):
 
 <img width="559" height="364" alt="image" src="https://github.com/user-attachments/assets/83974b39-9ca4-4952-8e52-8abec56a6cbb" />
 
-####3. Evidencia F6-E3: Inspección del Certificado X.509 con SAN (VM-1)
+#### 3. Evidencia F6-E3: Inspección del Certificado X.509 con SAN (VM-1)
 Certificado SSL/TLS reemitido incorporando los nombres de dominio de PocketBase en la extensión Subject Alternative Name (SAN):
 
 <img width="754" height="112" alt="image" src="https://github.com/user-attachments/assets/334118d3-4a0c-474f-91d1-bff0d10686da" />
