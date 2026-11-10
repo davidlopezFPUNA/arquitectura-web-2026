@@ -2,7 +2,7 @@
 
 **Estudiantes:** David López, Junior Legal  
 **Institución:** Facultad Politécnica - Universidad Nacional de Asunción (FPUNA)  
-**Sistema Operativo:** Ubuntu Server 24.04.4 LTS (x86_64)  
+**Sistema Operativo:** Ubuntu Server 24.04.5 LTS (x86_64)  
 **Infraestructura:** VirtualBox (2 vCPU, 2 GB RAM, 20 GB Disk)  
 
 ---
