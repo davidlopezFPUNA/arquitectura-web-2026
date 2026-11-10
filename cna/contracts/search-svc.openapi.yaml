@@ -11,10 +11,6 @@ servers:
   - url: http://localhost:8080
     description: Servidor Local de Desarrollo
 
-tags:
-  - name: Search
-    description: Operaciones de busqueda sobre el indice
-
 paths:
   /v2/search:
     get:
