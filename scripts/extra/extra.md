@@ -176,6 +176,9 @@ Se ejecutó la validación del contrato OpenAPI utilizando la herramienta **Spec
 
 # C4 - Nivel 1: Diagrama de Contexto (F5-E5)
 
+# C4 - Nivel 1: Diagrama de Contexto (F5-E5)
+
+```mermaid
 graph TD
     Client["Cliente / Host Windows"]
     Admin["Administrador del Sistema"]
@@ -186,6 +189,7 @@ graph TD
 
     Client -->|Petición HTTP - Puerto 80| App
     Admin -->|Admin UI - Puerto 80/8090| App
+```
 
 ---
 
