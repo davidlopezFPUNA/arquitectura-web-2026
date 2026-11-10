@@ -363,6 +363,34 @@ Evaluación detallada de riesgos de arquitectura sobre la infraestructura asigna
 
 ---
 
+## 5.1. B1 – Infraestructura Multi-Nodo
+
+### Descripción del Entorno
+Se ha configurado una infraestructura distribuida compuesta por dos máquinas virtuales Ubuntu Server 24.04 sobre VirtualBox:
+* **VM-1 (Gateway / Monolito Core):** `equipo-vm` (IP: `192.168.1.25/27`) - Encargada de recibir el tráfico HTTP/HTTPS externo y ejecutar la API principal de PocketBase sobre SQLite.
+* **VM-2 (Clúster Worker / Microservicios):** `equipo-vm2` (IP: `192.168.1.26/27`) - Clon enlazado configurado para hospedar de forma aislada los microservicios desacoplados y el bus de eventos.
+
+---
+
+### Evidencias de Despliegue
+
+#### 1. Evidencia F6-E1: Inspección de Recursos y Docker Engine (VM-1 / VM-2)
+Confirmación del entorno de ejecucion Docker en los nodos distribuidos (2 vCPU, 2 GB RAM, Kernel Linux 6.8):
+
+<img width="732" height="1115" alt="image" src="https://github.com/user-attachments/assets/38342093-6c3a-420a-aa4b-878bfbe4d28f" />
+
+####2. Evidencia F6-E2: Reglas de Firewall UFW por Nodo (VM-2)
+Aislamiento estricto de seguridad en VM-2: los puertos internos de los microservicios (8080/tcp, 8081/tcp) y del bus NATS (4222/tcp) únicamente aceptan peticiones originadas desde la dirección IP de VM-1 (192.168.1.25):
+
+<img width="559" height="364" alt="image" src="https://github.com/user-attachments/assets/83974b39-9ca4-4952-8e52-8abec56a6cbb" />
+
+####3. Evidencia F6-E3: Inspección del Certificado X.509 con SAN (VM-1)
+Certificado SSL/TLS reemitido incorporando los nombres de dominio de PocketBase en la extensión Subject Alternative Name (SAN):
+
+<img width="754" height="112" alt="image" src="https://github.com/user-attachments/assets/334118d3-4a0c-474f-91d1-bff0d10686da" />
+
+---
+
 ### 5.3. B3 – Contenerización con Buenas Prácticas
 
 En esta sección se rediseñó la estrategia de contenerización de los microservicios aplicando un enfoque de mínima superficie de ataque y optimización de recursos, cumpliendo con los siguientes criterios:
