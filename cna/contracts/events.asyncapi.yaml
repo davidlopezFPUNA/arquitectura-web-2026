@@ -1,6 +1,6 @@
 asyncapi: '3.0.0'
 info:
-  title: Bus de Eventos PocketBase - Ecosistema FPUNA
+  title: Bus de Eventos PocketBase
   version: '1.0.0'
   description: Canales de eventos para integracion asincrona del monolito PocketBase.
   contact:
