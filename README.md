@@ -15,10 +15,7 @@
 | **Repositorio Oficial** | [ganigeorgiev.com/pocketbase/pocketbase/releases](https://ganigeorgiev.com/pocketbase/pocketbase/releases) |
 | **Versión Instalada / Actualizada** | `v0.22.58` |
 | **Licencia** | MIT License |
-| **Lenguaje / Framework** | Go (Golang) |
-| **Servidor de Aplicación** | HTTPS Server embebido en Go |
-| **Base de Datos** | SQLite (embebida en archivo local) |
-| **Puertos Previstos** | `8090` (PocketBase Backend) / `80` (Nginx Reverse Proxy) |
+
 ---
 # Bloque I – Fase 5: Diseño y Descomposición del Monolito
 
