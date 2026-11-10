@@ -385,7 +385,7 @@ Confirmación del entorno de ejecucion Docker en los nodos distribuidos (2 vCPU,
 #### 2. Evidencia F6-E2: Reglas de Firewall UFW por Nodo (VM-2)
 Aislamiento estricto de seguridad en VM-2: los puertos internos de los microservicios (8080/tcp, 8081/tcp) y del bus NATS (4222/tcp) únicamente aceptan peticiones originadas desde la dirección IP de VM-1 (192.168.1.25):
 
-<img width="559" height="364" alt="image" src="https://github.com/user-attachments/assets/83974b39-9ca4-4952-8e52-8abec56a6cbb" />
+<img width="570" height="254" alt="image" src="https://github.com/user-attachments/assets/67589cde-9b90-48ce-849f-9b64c308cedd" />
 
 #### 3. Evidencia F6-E3: Inspección del Certificado X.509 con SAN (VM-1)
 Certificado SSL/TLS reemitido incorporando los nombres de dominio de PocketBase en la extensión Subject Alternative Name (SAN):
