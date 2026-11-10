@@ -174,6 +174,26 @@ Se ejecutó la validación del contrato OpenAPI utilizando la herramienta **Spec
 
 ---
 
+# C4 - Nivel 1: Diagrama de Contexto (F5-E5)
+
+graph TD
+    User["Usuario / Cliente Web"]
+    Admin["Administrador del Sistema"]
+
+    subgraph Boundary["Ecosistema PocketBase FPUNA"]
+        App["Plataforma Web Desacoplada"]
+    end
+
+    ExtEmail["Servicio SMTP (Email)"]
+    ExtStorage["Almacenamiento Local / S3"]
+
+    User -->|HTTP/HTTPS - REST API| App
+    Admin -->|HTTP/HTTPS - Admin UI| App
+    App -->|SMTP / Port 587| ExtEmail
+    App -->|FileSystem / POSIX| ExtStorage
+
+---
+
 ### 5.3. B3 – Contenerización con Buenas Prácticas
 
 En esta sección se rediseñó la estrategia de contenerización de los microservicios aplicando un enfoque de mínima superficie de ataque y optimización de recursos, cumpliendo con los siguientes criterios:
