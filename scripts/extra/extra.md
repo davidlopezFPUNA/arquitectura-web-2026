@@ -177,20 +177,15 @@ Se ejecutó la validación del contrato OpenAPI utilizando la herramienta **Spec
 # C4 - Nivel 1: Diagrama de Contexto (F5-E5)
 
 graph TD
-    User["Usuario / Cliente Web"]
+    Client["Cliente / Host Windows"]
     Admin["Administrador del Sistema"]
 
-    subgraph Boundary["Ecosistema PocketBase FPUNA"]
+    subgraph Boundary["Ecosistema PocketBase FPUNA (Red 192.168.1.0/27)"]
         App["Plataforma Web Desacoplada"]
     end
 
-    ExtEmail["Servicio SMTP (Email)"]
-    ExtStorage["Almacenamiento Local / S3"]
-
-    User -->|HTTP/HTTPS - REST API| App
-    Admin -->|HTTP/HTTPS - Admin UI| App
-    App -->|SMTP / Port 587| ExtEmail
-    App -->|FileSystem / POSIX| ExtStorage
+    Client -->|Petición HTTP - Puerto 80| App
+    Admin -->|Admin UI - Puerto 80/8090| App
 
 ---
 
