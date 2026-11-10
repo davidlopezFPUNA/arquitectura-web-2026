@@ -147,25 +147,34 @@ flowchart TD
 
 # 4.3. A3 – Contratos de API y de Eventos
 
-### 1. Sobre de Evento Común (Common Event Envelope)
+## Política de Versionado
+Para garantizar la retrocompatibilidad y no romper a los consumidores existentes (frontend u otros microservicios):
+- **API REST:** Todas las nuevas rutas extraídas del monolito de PocketBase se exponen bajo el prefijo `/v2/` (ej. `/v2/search`, `/v2/export`).
+- **Eventos (Mensajería):** Todos los eventos asíncronos incluyen un campo `version` en su sobre común (ej. `"version": "1.0.0"`).
+- **Transición a v3 sin romper consumidores:** 
+  - **APIs REST:** Si en el futuro se requiere un cambio disruptivo (*breaking change*), se desplegará una nueva ruta `/v3/` (ej. `/v3/search`). Los endpoints `/v2/` seguirán funcionando en paralelo en el mismo microservicio o enrutador durante un periodo de transición, permitiendo a los clientes migrar a su propio ritmo.
+  - **Eventos Asíncronos:** Los nuevos eventos se publicarán con el campo `"version": "2.0.0"` en el sobre. Los consumidores existentes estarán programados bajo el principio de robustez (ignorando campos desconocidos o filtrando por la versión soportada), permitiendo la emisión paralela sin afectar los procesos activos.
 
-Todos los eventos emitidos a través del bus de eventos (**NATS JetStream**) hacia los microservicios consumidores comparten una estructura JSON estandarizada para garantizar la trazabilidad e idempotencia:
+---
 
-```json
-{
-  "event_id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
-  "type": "pocketbase.contact.created",
-  "version": "1.0.0",
-  "occurred_at": "2026-11-10T20:30:00Z",
-  "request_id": "req-9876543210",
-  "payload": {
-    "id": "abc123contact",
-    "nombre": "Juan Pérez",
-    "email": "juan.perez@fpuna.edu.py",
-    "created": "2026-11-10T20:30:00Z"
-  }
-}
+## Contratos OpenAPI 3.1 (REST) y AsyncAPI 3.0 (Eventos)
+Los esquemas completos con esquemas de datos, códigos de respuesta (200, 202, 400, 404, 503) y el diseño del sobre de eventos común (`event_id`, `type`, `version`, `occurred_at`, `request_id`, `payload`) se encuentran disponibles y validados en el directorio `cna/contracts/`:
+
+- **Contrato de Búsqueda:** `cna/contracts/search-svc.openapi.yaml`
+- **Contrato de Exportación:** `cna/contracts/export-svc.openapi.yaml`
+- **Bus de Eventos (PocketBase):** `cna/contracts/events.asyncapi.yaml`
+
+---
+
+## Evidencia de Validación (Evidencia F5-E4)
+
+Se ejecutó la validación del contrato OpenAPI utilizando la herramienta **Spectral** dentro del repositorio local en la máquina virtual:
+
+```bash
+cd ~/arquitectura-web-2026/cna/contracts
+npx @stoplight/spectral-cli lint search-svc.openapi.yaml
 ```
+
 ---
 
 ### 5.3. B3 – Contenerización con Buenas Prácticas
