@@ -170,7 +170,7 @@ Los esquemas completos con esquemas de datos, códigos de respuesta (200, 202, 4
 
 Se ejecutó la validación del contrato OpenAPI utilizando la herramienta **Spectral** dentro del repositorio local en la máquina virtual:
 
-<img width="1114" height="38" alt="image" src="https://github.com/user-attachments/assets/1bb103a7-21e3-4973-b4b7-9b2c9fc6da20" />
+<img width="1246" height="185" alt="image" src="https://github.com/user-attachments/assets/9da812ce-a37e-4b6f-8473-14dce121a633" />
 
 ---
 
