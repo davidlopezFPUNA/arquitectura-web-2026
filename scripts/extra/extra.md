@@ -8,6 +8,42 @@ Se inspeccionó la base de datos embebida SQLite de PocketBase (`data.db`) ejecu
 
 ---
 
+### Evidencia F5-E2: Matriz de Acoplamiento
+
+A continuación se detalla la matriz de dependencia entre módulos funcionales y tablas del motor SQLite, identificando las tablas compartidas que representan acoplamiento directo en la arquitectura actual:
+
+| Tabla / Módulo | Usuarios / Permisos | Colecciones / Contenido | Parámetros Globales | Migraciones | ¿Tabla Compartida / Acoplada? |
+| :--- | :---: | :---: | :---: | :---: | :---: |
+| `_admins` | X | | | | No |
+| `users` | X | X (Relación con contactos) | | | Sí (Acoplada) |
+| `_collections` | | X | | | No |
+| `contactos` | | X | | | No |
+| `_externalAuths` | X | | | | No |
+| `_params` | X | X | X | | Sí (Global) |
+| `_migrations` | | | | X | No |
+
+> **Nota de Acoplamiento:** Las tablas `users` y `_params` actúan como puntos de acoplamiento fuerte en el monolito, ya que la gestión de datos (`contactos`) depende directamente del modelo de usuarios y las configuraciones globales del sistema.
+
+---
+
+### Mapa de Contextos / DDD (Evidencia F5-E3)
+
+El diseño del Mapa de Contextos (Bounded Contexts) bajo Domain-Driven Design para el desacoplamiento del monolito se estructura de la siguiente manera:
+
++------------------------------------+          +------------------------------------+
+|   Contexto: Autenticación / User   |          |      Contexto: Almacenamiento      |
+|              (Auth-SVC)            |          |           (Storage-SVC)            |
++------------------------------------+          +------------------------------------+
+^                                       ^
+| (Cliente / Proveedor)                 | (ACL / Permisos)
+v                                       v
++------------------------------------------------------------------------------------+
+|                        Contexto Core: Datos / Contactos                            |
+|                                  (PocketBase Core)                                 |
++------------------------------------------------------------------------------------+
+
+---
+
 ### 5.3. B3 – Contenerización con Buenas Prácticas
 
 En esta sección se rediseñó la estrategia de contenerización de los microservicios aplicando un enfoque de mínima superficie de ataque y optimización de recursos, cumpliendo con los siguientes criterios:
