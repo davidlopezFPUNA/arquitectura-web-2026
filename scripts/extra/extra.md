@@ -317,6 +317,32 @@ sequenceDiagram
         ES->>ES: Registrar fallo en logs de auditoría
     end
 ```
+---
+
+# 4.5. A5 – Plan de Migración y Matriz de Riesgos
+
+### 1. Orden de Extracción Justificado (Menor a Mayor Riesgo)
+
+El desacoplamiento del monolito PocketBase se realiza en fases incrementales para minimizar el impacto en el negocio:
+
+| Fase | Servicio / Módulo | Nivel de Riesgo | Justificación técnica | Criterio de "Hecho" (Definition of Done) |
+| :--- | :--- | :--- | :--- | :--- |
+| **Paso 1** | **Servicio de Exportación (`export-svc`)** | **Bajo** | Operación de solo lectura asíncrona y no crítica para las transacciones inmediatas del usuario. | El servicio procesa eventos `export.requested` desde NATS JetStream, genera reportes en background y los deposita en el volumen local. |
+| **Paso 2** | **Servicio de Búsqueda (`search-svc`)** | **Medio** | Extrae las consultas de búsqueda de la base de datos principal SQLite (`pb_data`), aliviando bloqueos de lectura. | El índice desacoplado procesa eventos `pocketbase.contact.*` con 0 errores y atiende `/v2/search` con latencia < 50ms. |
+| **Paso 3** | **Servicio de Auditoría (`audit-svc`)** | **Alto** | Registra trazas de operaciones críticas. Al ser altamente dependiente de webhooks, requiere validar el manejo de fallos y DLQ. | El 100% de los cambios de estado en PocketBase generan registros de auditoría persistentes de forma asíncrona sin ralentizar las respuestas HTTP. |
+
+---
+
+### 2. Estrategia de Reversión (Rollback en < 1 minuto)
+
+Para desactivar inmediatamente cualquier ruta `/v2/*` redirigida en el API Gateway (Nginx Proxy) y retornar la atención de tráfico directamente al monolito PocketBase:
+
+1. **Procedimiento de Desactivación:**
+   Se dispone de una plantilla de configuración de Nginx (`nginx.conf.bak`) preconfigurada que redirige todas las llamadas `/v2/` a las colecciones nativas de PocketBase (`/api/collections/`).
+
+2. **Comando de Rollback (Ejecución en terminal):**
+   ```bash
+   cp /etc/nginx/templates/rollback-v1.conf /etc/nginx/conf.d/default.conf && nginx -s reload
 
 ---
 
