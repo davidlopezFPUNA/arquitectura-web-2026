@@ -94,10 +94,10 @@ flowchart TD
 ### ADR-007: Selección del Broker de Mensajes
 
 * **Estatus:** Aprobado
-* **Contexto:** Se requiere un bus de mensajería para garatizar la entrega confiable de eventos entre el `event-bridge` y los microservicios consumidores (Búsqueda, Auditoría, Exportación).
+* **Contexto:** Se requiere un bus de mensajería para garantizar la entrega confiable de eventos entre el `event-bridge` y los microservicios consumidores (Búsqueda, Auditoría, Exportación).
 * **Decisión:** Seleccionar **NATS JetStream** como broker principal de eventos.
 * **Alternativas Descartadas:** 
-  * *RabbitMQ:* Descartado por su elevado consumo de memoria RAM y complejidad operativa para el entorno asignado.
+  * *RabbitMQ:* Descartado por su elevado consumo de memoria RAM y complejidad operativa para el entorno de recursos limitados.
   * *Redis Streams:* Descartado por carecer de mecanismos nativos más avanzados para la persistencia de streams a largo plazo comparado con JetStream.
 * **Consecuencias:** 
   * *Positivas:* Huella de memoria sumamente baja (< 20 MB RAM), alto rendimiento en throughput y persistencia nativa con JetStream.
@@ -108,13 +108,13 @@ flowchart TD
 ### ADR-008: Plataforma de Orquestación
 
 * **Estatus:** Aprobado
-* **Contexto:** La infraestructura asignada se limita a máquinas virtuales de 2 vCPU y 4 GB de RAM sobre VMware Workstation (`equipo-vm`).
+* **Contexto:** La infraestructura asignada se limita a máquinas virtuales en VirtualBox con 2 vCPU, 2 GB de RAM y 20 GB de Disco sobre Ubuntu Server 24.04.4 LTS (FPUNA).
 * **Decisión:** Utilizar **Docker Compose** como motor de orquestación y despliegue del entorno.
 * **Alternativas Descartadas:** 
-  * *k3s (Lightweight Kubernetes):* Descartado porque el consumo base del plano de control en memoria RAM reduce significativamente la capacidad operativa para los contenedores.
-  * *Docker Swarm:* Descartado por añadir complejidad sintáctica no requerida para el volumen de nodos actual.
+  * *k3s (Lightweight Kubernetes):* Descartado porque el consumo base del plano de control en memoria RAM sobrepasa la capacidad disponible (2 GB RAM) e inestabiliza los nodos.
+  * *Docker Swarm:* Descartado por añadir complejidad sintáctica no requerida para el entorno mono-nodo actual.
 * **Consecuencias:** 
-  * *Positivas:* Consumo insignificante de recursos de sistema, sintaxis declarativa simple y rápido ciclo de despliegue.
+  * *Positivas:* Consumo insignificante de recursos de sistema, sintaxis declarativa simple y rápido ciclo de despliegue sobre Ubuntu Server 24.04.4 LTS.
   * *Negativas:* Ausencia de autoscaling automático y orquestación multi-nodo avanzada.
 
 ---
