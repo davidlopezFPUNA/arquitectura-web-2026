@@ -76,6 +76,75 @@ flowchart TD
 ```
 ---
 
+# 4.2. A2 – Registro de Decisiones de Arquitectura (ADR-006 a ADR-010)
+
+### ADR-006: Estrategia de Migración e Integración con el Monolito
+
+* **Estatus:** Aprobado
+* **Contexto:** El monolito basado en PocketBase debe mantenerse en producción y operando sin interrupciones mientras se realiza la extracción progresiva de funcionalidades hacia microservicios.
+* **Decisión:** Adoptar el patrón **Strangler Fig** utilizando integración exclusiva mediante la API REST nativa de PocketBase y Webhooks, sin modificar el código base del binario del monolito.
+* **Alternativas Descartadas:** 
+  * *Modificación del core de PocketBase:* Descartado debido a que alterar el código fuente en Go del monolito incrementa el acoplamiento y dificulta futuras actualizaciones del motor base.
+* **Consecuencias:** 
+  * *Positivas:* Riesgo operativo mínimo durante la migración; permite desplegar y validar microservicios de forma independiente.
+  * *Negativas:* Requiere configurar una capa intermedia (`event-bridge`) para transformar webhooks de PocketBase en eventos asíncronos.
+
+---
+
+### ADR-007: Selección del Broker de Mensajes
+
+* **Estatus:** Aprobado
+* **Contexto:** Se requiere un bus de mensajería para garatizar la entrega confiable de eventos entre el `event-bridge` y los microservicios consumidores (Búsqueda, Auditoría, Exportación).
+* **Decisión:** Seleccionar **NATS JetStream** como broker principal de eventos.
+* **Alternativas Descartadas:** 
+  * *RabbitMQ:* Descartado por su elevado consumo de memoria RAM y complejidad operativa para el entorno asignado.
+  * *Redis Streams:* Descartado por carecer de mecanismos nativos más avanzados para la persistencia de streams a largo plazo comparado con JetStream.
+* **Consecuencias:** 
+  * *Positivas:* Huella de memoria sumamente baja (< 20 MB RAM), alto rendimiento en throughput y persistencia nativa con JetStream.
+  * *Negativas:* Menor ecosistema de librerías en comparación con RabbitMQ.
+
+---
+
+### ADR-008: Plataforma de Orquestación
+
+* **Estatus:** Aprobado
+* **Contexto:** La infraestructura asignada se limita a máquinas virtuales de 2 vCPU y 4 GB de RAM sobre VMware Workstation (`equipo-vm`).
+* **Decisión:** Utilizar **Docker Compose** como motor de orquestación y despliegue del entorno.
+* **Alternativas Descartadas:** 
+  * *k3s (Lightweight Kubernetes):* Descartado porque el consumo base del plano de control en memoria RAM reduce significativamente la capacidad operativa para los contenedores.
+  * *Docker Swarm:* Descartado por añadir complejidad sintáctica no requerida para el volumen de nodos actual.
+* **Consecuencias:** 
+  * *Positivas:* Consumo insignificante de recursos de sistema, sintaxis declarativa simple y rápido ciclo de despliegue.
+  * *Negativas:* Ausencia de autoscaling automático y orquestación multi-nodo avanzada.
+
+---
+
+### ADR-009: Base de Datos por Servicio (Database per Service)
+
+* **Estatus:** Aprobado
+* **Contexto:** Los nuevos microservicios extraídos necesitan persistir su información sin depender del esquema interno o la base de datos SQLite del monolito PocketBase (`pb_data/data.db`).
+* **Decisión:** Aplicar estrictamente el patrón **Database per Service**, prohibiendo el acceso directo de los microservicios al archivo SQLite de PocketBase.
+* **Alternativas Descartadas:** 
+  * *Base de datos compartida (Shared SQLite):* Descartado debido a los bloqueos de escritura concurrentes (`database is locked`) propios de SQLite y el acoplamiento fuerte de modelos.
+* **Consecuencias:** 
+  * *Positivas:* Autonomía completa del modelo de datos de cada microservicio; eliminación del punto único de falla en almacenamiento.
+  * *Negativas:* Se requiere gestionar consistencia eventual entre la base de datos de PocketBase y los nuevos almacenes.
+
+---
+
+### ADR-010: Consistencia Eventual e Idempotencia
+
+* **Estatus:** Aprobado
+* **Contexto:** Las operaciones de actualización hacia los servicios desacoplados se procesan de forma asíncrona a través del bus de eventos.
+* **Decisión:** Implementar un modelo de **Consistencia Eventual** garantizando idempotencia en los consumidores mediante `event_id` único y gestionando fallos con colas de mensajes no procesables (Dead Letter Queue - DLQ).
+* **Alternativas Descartadas:** 
+  * *Transacciones distribuidas (2PC / Two-Phase Commit):* Descartadas por su alta latencia y baja tolerancia a fallos en arquitecturas orientadas a eventos.
+* **Consecuencias:** 
+  * *Positivas:* Alta disponibilidad y resiliencia; los eventos duplicados o fuera de orden no corrompen el estado del sistema.
+  * *Negativas:* Existencia de un breve desfase de milisegundos hasta que los datos se reflejen totalmente en los servicios secundarios.
+
+---
+
 ### 5.3. B3 – Contenerización con Buenas Prácticas
 
 En esta sección se rediseñó la estrategia de contenerización de los microservicios aplicando un enfoque de mínima superficie de ataque y optimización de recursos, cumpliendo con los siguientes criterios:
