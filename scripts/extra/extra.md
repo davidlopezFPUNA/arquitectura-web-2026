@@ -145,6 +145,29 @@ flowchart TD
 
 ---
 
+# 4.3. A3 – Contratos de API y de Eventos
+
+### 1. Sobre de Evento Común (Common Event Envelope)
+
+Todos los eventos emitidos a través del bus de eventos (**NATS JetStream**) hacia los microservicios consumidores comparten una estructura JSON estandarizada para garantizar la trazabilidad e idempotencia:
+
+```json
+{
+  "event_id": "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11",
+  "type": "pocketbase.contact.created",
+  "version": "1.0.0",
+  "occurred_at": "2026-11-10T20:30:00Z",
+  "request_id": "req-9876543210",
+  "payload": {
+    "id": "abc123contact",
+    "nombre": "Juan Pérez",
+    "email": "juan.perez@fpuna.edu.py",
+    "created": "2026-11-10T20:30:00Z"
+  }
+}
+```
+---
+
 ### 5.3. B3 – Contenerización con Buenas Prácticas
 
 En esta sección se rediseñó la estrategia de contenerización de los microservicios aplicando un enfoque de mínima superficie de ataque y optimización de recursos, cumpliendo con los siguientes criterios:
