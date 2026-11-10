@@ -1,39 +1,97 @@
-openapi: 3.1.0
+asyncapi: '3.0.0'
 info:
-  title: Export Service API - PocketBase Ecosystem
-  version: 2.0.0
-  description: Microservicio de exportacion asincrona desacoplado de PocketBase.
+  title: Bus de Eventos PocketBase - Ecosistema FPUNA
+  version: '1.0.0'
+  description: Canales de eventos para integracion asincrona del monolito PocketBase.
   contact:
     name: Soporte FPUNA
+    url: https://www.pol.una.py
     email: soporte@fpuna.edu.py
+  license:
+    name: MIT
+  tags:
+    - name: PocketBase
+      description: Canales de eventos emitidos desde el monolito
 
 servers:
-  - url: http://localhost:8081
-    description: Servidor Local de Desarrollo
+  nats:
+    host: localhost:4222
+    protocol: nats
+    description: Broker NATS JetStream para la gestion de eventos
 
-tags:
-  - name: Export
-    description: Operaciones de exportacion de datos
+channels:
+  pocketbaseContactCreated:
+    address: pocketbase.contact.created
+    messages:
+      contactCreated:
+        $ref: '#/components/messages/ContactCreatedMessage'
 
-paths:
-  /v2/export:
-    post:
-      summary: Solicitar exportacion de datos
-      description: Endpoint para solicitar la generacion de reportes de contactos desde PocketBase.
-      operationId: requestExport
-      tags:
-        - Export
-      responses:
-        '202':
-          description: Solicitud de exportacion aceptada y en proceso
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  job_id: { type: string, example: "job-12345" }
-                  status: { type: string, example: "PROCESSING" }
-        '400':
-          description: Parametros de solicitud invalidos
-        '503':
-          description: Servicio de exportacion no disponible temporalmente
+  pocketbaseContactUpdated:
+    address: pocketbase.contact.updated
+    messages:
+      contactUpdated:
+        $ref: '#/components/messages/ContactUpdatedMessage'
+
+  pocketbaseContactDeleted:
+    address: pocketbase.contact.deleted
+    messages:
+      contactDeleted:
+        $ref: '#/components/messages/ContactDeletedMessage'
+
+  exportRequested:
+    address: export.requested
+    messages:
+      exportReq:
+        $ref: '#/components/messages/ExportRequestedMessage'
+
+  exportCompleted:
+    address: export.completed
+    messages:
+      exportComp:
+        $ref: '#/components/messages/ExportCompletedMessage'
+
+  mediaUploaded:
+    address: media.uploaded
+    messages:
+      mediaUp:
+        $ref: '#/components/messages/MediaUploadedMessage'
+
+components:
+  messages:
+    ContactCreatedMessage:
+      name: ContactCreatedMessage
+      title: Evento de Creacion de Contacto
+      payload:
+        type: object
+        properties:
+          event_id: { type: string, format: uuid }
+          type: { type: string, example: "pocketbase.contact.created" }
+          version: { type: string, example: "1.0.0" }
+          occurred_at: { type: string, format: date-time }
+          request_id: { type: string }
+          payload: { type: object }
+
+    ContactUpdatedMessage:
+      name: ContactUpdatedMessage
+      payload:
+        type: object
+
+    ContactDeletedMessage:
+      name: ContactDeletedMessage
+      payload:
+        type: object
+
+    ExportRequestedMessage:
+      name: ExportRequestedMessage
+      payload:
+        type: object
+
+    ExportCompletedMessage:
+      name: ExportCompletedMessage
+      payload:
+        type: object
+
+    MediaUploadedMessage:
+      name: MediaUploadedMessage
+      payload:
+        type: object
