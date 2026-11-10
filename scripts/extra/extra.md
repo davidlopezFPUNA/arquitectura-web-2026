@@ -108,7 +108,7 @@ flowchart TD
 ### ADR-008: Plataforma de Orquestación
 
 * **Estatus:** Aprobado
-* **Contexto:** La infraestructura asignada se limita a máquinas virtuales en VirtualBox con 2 vCPU, 2 GB de RAM y 20 GB de Disco sobre Ubuntu Server 24.04.4 LTS (FPUNA).
+* **Contexto:** La infraestructura asignada se limita a máquinas virtuales en VirtualBox con 2 vCPU, 2 GB de RAM y 20 GB de Disco sobre Ubuntu Server 24.04.4 LTS.
 * **Decisión:** Utilizar **Docker Compose** como motor de orquestación y despliegue del entorno.
 * **Alternativas Descartadas:** 
   * *k3s (Lightweight Kubernetes):* Descartado porque el consumo base del plano de control en memoria RAM sobrepasa la capacidad disponible (2 GB RAM) e inestabiliza los nodos.
