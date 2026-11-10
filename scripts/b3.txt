@@ -1,0 +1,47 @@
+##backup del dockerfile
+sudo cp /home/dlopez/arquitectura-web-2026/services/search-svc/Dockerfile /home/dlopez/arquitectura-web-2026/services/search-svc/Dockerfile.bak
+sudo nano /home/dlopez/arquitectura-web-2026/services/search-svc/Dockerfile
+
+
+# Etapa 1: preparar las dependencias
+FROM python:3.11-slim AS builder
+
+WORKDIR /build
+
+RUN python -m venv /opt/venv
+
+COPY requirements.txt .
+RUN /opt/venv/bin/pip install --no-cache-dir -r requirements.txt
+
+# Etapa 2: imagen final de ejecución
+FROM python:3.11-slim AS runtime
+
+ENV PATH="/opt/venv/bin:$PATH" \
+    PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PORT=8000
+
+WORKDIR /app
+
+RUN groupadd --gid 10001 appuser \
+    && useradd --uid 10001 --gid appuser \
+       --no-create-home --shell /usr/sbin/nologin appuser
+
+COPY --from=builder /opt/venv /opt/venv
+COPY app /app/app
+
+USER appuser
+
+EXPOSE 8000
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+
+
+Multi-stage: tiene las etapas builder y runtime.
+Base mínima: usa python:3.11-slim.
+Usuario no root: ejecuta con USER appuser.
+
+
+#comprobar que config se aplicó
+sudo cat /home/dlopez/arquitectura-web-2026/services/search-svc/Dockerfile
