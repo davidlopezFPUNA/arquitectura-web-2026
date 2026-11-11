@@ -439,7 +439,12 @@ Recepción de solicitud de exportación retornando `202 Accepted` y el identific
 
 <img width="1111" height="150" alt="image" src="https://github.com/user-attachments/assets/bddd1f5b-4869-4de6-8fa8-abf37bdc8797" />
 
-#### 4. Evidencia F6-E8: Procesamiento de Archivos en Media Service (media-svc)
+#### 4. Evidencia F6-E7: Ciclo Completo de Job y Almacenamiento de Objeto (export-svc)
+Consulta de estado del trabajo (`/v2/export/status`) confirmando la transición al estado `done` y la disponibilidad de la URL del archivo generado en almacenamiento:
+
+<img width="1516" height="149" alt="image" src="https://github.com/user-attachments/assets/2fbed43f-5314-4280-991b-bfdec5d095b5" />
+
+#### 5. Evidencia F6-E8: Procesamiento de Archivos en Media Service (media-svc)
 Confirmación de carga de medios con emisión del evento `media.uploaded` y generación de miniaturas:
 
 <img width="1222" height="154" alt="image" src="https://github.com/user-attachments/assets/08938594-9d8b-49bf-b0c2-b4599b434b82" />
