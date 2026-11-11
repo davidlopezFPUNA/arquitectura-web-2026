@@ -451,32 +451,25 @@ Confirmación de carga de medios con emisión del evento `media.uploaded` y gene
 
 ---
 
-### 5.3. B3 – Contenerización con Buenas Prácticas
+## 5.3. B3 – Contenerización con Buenas Prácticas
 
-En esta sección se rediseñó la estrategia de contenerización de los microservicios aplicando un enfoque de mínima superficie de ataque y optimización de recursos, cumpliendo con los siguientes criterios:
+### Resumen de Buenas Prácticas Aplicadas
+- **Dockerfiles Multi-Stage**: Reducción de footprint de ~300MB a ~23MB basando el runtime en `alpine:3.19`.
+- **Seguridad**: Ejecución bajo usuario no privilegiado (`appuser`) y filesystem en modo solo lectura (`--read-only`).
+- **Resiliencia**: Sonda de `HEALTHCHECK` consultando `/healthz` cada 10 segundos.
+- **Gestión de Recursos**: Límites explícitos asignados por contenedor (256MB RAM y 0.5 vCPU).
+- **Etiquetado Semántico**: Uso estricto de versión semántica asociada al hash del commit Git (evitando `:latest`).
 
-*   **Dockerfile Multi-stage:** Se implementó un *builder* temporal para compilar dependencias (`wheels`), dejando una imagen final `python:3.11-slim` limpia y ligera.
-*   **Seguridad:** Ejecución con el usuario sin privilegios `appuser` (no-root) y sistema de archivos montado como solo lectura (`read_only: true`), utilizando `/tmp` para escrituras efímeras.
-*   **Tolerancia a fallos:** Incorporación de la instrucción `HEALTHCHECK` en Dockerfile, sondeando el endpoint `/healthz` de forma nativa.
-*   **Versionamiento:** Despliegue seguro prohibiendo la etiqueta `:latest`. Se utilizó versionamiento semántico ligado al hash del commit (Ej: `1.0.0-eba4c0b`).
-*   **Límites (Cgroups):** Contenedores restringidos por diseño a `0.25` CPUs y `128m` de memoria RAM, garantizando que el sumatorio (512MB RAM) no sature el nodo.
+---
 
-<details open>
-<summary>📸 <b>Evidencia F6-E9: Tabla de Imágenes y Tamaño</b></summary>
-<br>
+### Evidencias de Contenerización
 
-Listado de los microservicios compilados, mostrando el uso estricto de versionamiento semántico y la reducción de tamaño de las imágenes.
+#### 1. Evidencia F6-E9: Tabla de Imágenes y Tamaños
+Lista de imágenes empaquetadas con etiqueta semántica + hash de commit y su tamaño optimizado:
 
-![Evidencia F6-E9](./evidencias/F6-E9-out1.png)
+<img width="1375" height="130" alt="image" src="https://github.com/user-attachments/assets/afba1023-701a-44a2-b20e-d60c86390cb7" />
 
-</details>
+#### 2. Evidencia F6-E10: Inspección de Configuración (docker inspect)
+Confirmación del usuario no-root (`appuser`), asignación de recursos de CPU/memoria y configuración del `Healthcheck`:
 
-<details open>
-<summary>📸 <b>Evidencia F6-E10: Inspección de Seguridad y Límites (docker inspect)</b></summary>
-<br>
-
-Validación mediante `docker inspect` al contenedor `search-svc` demostrando: usuario `appuser`, límite de RAM en bytes (128MB), límite de CPU (0.25), `ReadonlyRootfs: true` y la definición explícita del `HEALTHCHECK`.
-
-![Evidencia F6-E10](./evidencias/F6-E10-out1.png)
-
-</details>
+<img width="1195" height="666" alt="image" src="https://github.com/user-attachments/assets/38cb9e6a-6c5b-4fdd-a9be-cd317da15a12" />
