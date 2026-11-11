@@ -394,6 +394,37 @@ Certificado SSL/TLS reemitido incorporando los nombres de dominio de PocketBase 
 
 ---
 
+## 5.2. B2 – Microservicios y Bus de Eventos
+
+### Resumen de Despliegue en VM-2 (192.168.1.26)
+Los cuatro microservicios (`search-svc`, `audit-svc`, `export-svc`, `media-svc`) han sido desplegados desacoplados en el nodo Worker (VM-2), consumiendo variables de entorno, exponiendo endpoints de resiliencia (`/healthz`, `/readyz`), métricas Prometheus (`/metrics`) e inyectando `X-Request-ID`.
+
+---
+
+### Evidencias de Ejecución
+
+#### 1. Evidencia F6-E4: Servicio de Búsqueda (search-svc)
+Consulta al endpoint `/v2/search` procesada correctamente a través de los índices de PocketBase:
+
+<img width="1024" height="144" alt="image" src="https://github.com/user-attachments/assets/e2f109e1-679f-4c2d-b0e8-b45c8630c820" />
+
+#### 2. Evidencia F6-E5: Idempotencia en Audit Service (audit-svc)
+Verificación de control de duplicados mediante `event_id`. El primer evento es registrado (`201 Created`), mientras que el duplicado es ignorado (`200 OK` - `ignored`):
+
+<img width="1371" height="370" alt="image" src="https://github.com/user-attachments/assets/2760f6a6-b513-4824-b68c-23e5915155c4" />
+
+#### 3. Evidencia F6-E6: Procesamiento Asíncrono en Export Service (export-svc)
+Recepción de solicitud de exportación retornando `202 Accepted` y el identificador único del trabajo (`job_id`):
+
+<img width="1111" height="150" alt="image" src="https://github.com/user-attachments/assets/bddd1f5b-4869-4de6-8fa8-abf37bdc8797" />
+
+#### 4. Evidencia F6-E8: Procesamiento de Archivos en Media Service (media-svc)
+Confirmación de carga de medios con emisión del evento `media.uploaded` y generación de miniaturas:
+
+<img width="1222" height="154" alt="image" src="https://github.com/user-attachments/assets/08938594-9d8b-49bf-b0c2-b4599b434b82" />
+
+---
+
 ### 5.3. B3 – Contenerización con Buenas Prácticas
 
 En esta sección se rediseñó la estrategia de contenerización de los microservicios aplicando un enfoque de mínima superficie de ataque y optimización de recursos, cumpliendo con los siguientes criterios:
