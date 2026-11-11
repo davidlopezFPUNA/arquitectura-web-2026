@@ -473,3 +473,50 @@ Lista de imágenes empaquetadas con etiqueta semántica + hash de commit y su ta
 Confirmación del usuario no-root (`appuser`), asignación de recursos de CPU/memoria y configuración del `Healthcheck`:
 
 <img width="1195" height="666" alt="image" src="https://github.com/user-attachments/assets/38cb9e6a-6c5b-4fdd-a9be-cd317da15a12" />
+
+
+## 5.4. B4 – Integración con el Monolito y el Broker
+
+### 1. Broker y Event Bridge
+
+Se desplegaron **NATS JetStream (`2.14.9-alpine`)** y **event-bridge (`1.0.0`)** mediante Docker Compose en **VM-2 (`192.168.1.26`)**, ambos con estado `healthy`.
+
+- **Persistencia:** JetStream utiliza un volumen Docker para conservar los mensajes.
+- **Streams:** `CONTACTS`, `EXPORTS`, `MEDIA` y `DLQ`.
+- **Consumidores durables:** `search-consumer` y `audit-consumer`, con ACK explícito.
+- **Autenticación:** el puente valida `X-Webhook-Token` y rechaza tokens incorrectos con `401`.
+- **Deduplicación:** utiliza `event_id` como `Nats-Msg-Id`.
+
+---
+
+### 2. Integración con PocketBase
+
+En **VM-1 (`192.168.1.25`)** se agregaron hooks externos para generar eventos de creación, actualización y eliminación de registros de la colección `contactos`, sin modificar el binario de PocketBase.
+
+```text
+PocketBase → Hooks → Cola local → Emisor HTTP → event-bridge → NATS
+```
+
+El servicio `pocketbase-event-sender` conserva los eventos pendientes en disco y reintenta su envío ante errores. Solo elimina cada archivo después de recibir la confirmación del puente.
+
+> La escritura del contacto y del evento son operaciones separadas; no se garantiza atomicidad entre ambas.
+
+---
+
+### 3. Verificación de Integración (Avance de F6-E12)
+
+Se creó un contacto de prueba y se verificó la publicación del evento en JetStream:
+
+| Campo | Resultado |
+| :--- | :--- |
+| **event_id** | `fbac0a42-b534-41c1-81a7-9d5f4d1e3033` |
+| **request_id** | `d1d8fdb4-5253-4c7d-833f-6d57dcb4429c` |
+| **Stream / Secuencia** | `CONTACTS` / `1` |
+| **Hook** | `Evento guardado para envío` |
+| **Emisor** | `Evento entregado y confirmado` |
+
+También se verificó el rechazo de un token incorrecto (`401`) y el reenvío de un evento sin duplicarlo dentro de la ventana de deduplicación.
+
+```bash
+sudo journalctl -u pocketbase -u pocketbase-event-sender --since "3 minutes ago" --no-pager
+```
