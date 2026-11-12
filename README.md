@@ -591,3 +591,74 @@ Se inicializó un clúster **Docker Swarm** de dos nodos conectando **VM-1 (`equ
 
 #### **Evidencia F6-E16 — Orquestación Docker Swarm Multi-Nodo y contenedores `healthy`**
 <img width="750" height="278" alt="image" src="https://github.com/user-attachments/assets/7e24f8a6-4445-4ebd-ae2c-4113774f8063" />
+
+---
+
+## 6.1. C1 — Resiliencia y Experimentos de Caos (Fase 7)
+
+Para validar la tolerancia a fallos de la arquitectura distribuida frente a la línea base monolítica de la Fase 4[cite: 9], se ejecutaron los **5 experimentos de caos obligatorios (X1–X5)** documentando hipótesis, procedimiento, resultados y tiempos de recuperación (**MTTR**)[cite: 9].
+
+### Resumen de Resultados (Tabla de Experimentos)
+
+| ID | Experimento | Resultado Esperado | Resultado Obtenido | MTTR / Tiempo Medido | Evidencia |
+| :--- | :--- | :--- | :--- | :--- | :--- |
+| **X1** | `docker kill` del contenedor de S1 (`search-svc`)[cite: 9] | Monolito responde `200`; `/v2/search` responde `503` JSON; el orquestador lo recrea solo[cite: 9] | El monolito en VM-1 mantuvo disponibilidad (`HTTP 200`)[cite: 27]; `/v2/search` devolvió `HTTP 503` JSON uniforme en `[+19.29s]` durante el `docker kill` y Docker Swarm recreó la réplica automáticamente en `[+20.34s]` (`1/1`)[cite: 27] | **~1.05 s (Gateway) / ~10 s (Swarm)**[cite: 27] | `evidencias/F7-E01.png` |
+| **X2** | Detener S2 (`audit-svc`) durante 2 minutos mientras se editan/publican 20 eventos[cite: 9] | Al volver, S2 procesa los 20 eventos pendientes con cero pérdida (CA-6)[cite: 9] | Durante los `120 s` con `audit-svc=0`[cite: 26], NATS JetStream retuvo los 20 mensajes en el stream `EVENTS`; al escalar nuevamente a `1/1`, el servicio convergió (`Audit Service listo en puerto 8082`) y procesó la cola sin pérdida[cite: 26] | **120 s (ventana) + <10 s reconexión**[cite: 26] | `evidencias/F7-E02.png` |
+| **X3** | Matar un *worker* de S3 (`export-svc`) a mitad de un job[cite: 9] | El job vuelve a la cola y otro *worker* lo completa sin quedar en `running` indefinidamente[cite: 9] | Con `export-svc` escalado a 2 réplicas en modo `ingress`, al aplicar `docker kill` (`task: non-zero exit 137`) sobre un contenedor, la segunda réplica sostuvo el servicio y Swarm levantó el reemplazo en `9 s` sin tareas bloqueadas[cite: 24] | **~9 s**[cite: 24] | `evidencias/F7-E03.png` |
+| **X4** | Apagar VM-2 completa (`equipo-vm2`)[cite: 9] | El monolito sigue operativo (CA-5); al encender VM-2 el sistema converge sin intervención manual[cite: 9] | Con `equipo-vm2` en estado `Down`, el monolito en VM-1 continuó respondiendo `HTTP 200` y el Gateway aisló el fallo con `503` JSON[cite: 20]; al reencender VM-2, el nodo pasó a `Ready` y los `6/6` servicios convergieron solos a `1/1`[cite: 23] | **<15 s post-arranque**[cite: 23] | `evidencias/F7-E04a.png`<br>`evidencias/F7-E04b.png` |
+| **X5** | Latencia artificial de `2 s` (`2000 ms`) hacia la API del monolito mediante `tc netem`[cite: 9] | S1 aplica timeout, reintentos con *backoff* exponencial e interruptor de circuito sin saturar hilos[cite: 9] | Con `netem delay 2000ms` activo, las 8 peticiones concurrentes completaron de forma acotada (~`4.05 s` incluyendo RTT ida/vuelta y protección `limit_req` en `0.02 s`–`0.08 s`)[cite: 22], evitando el bloqueo indefinido de *workers* y normalizando al retirar la regla `tc`[cite: 22] | **0 s (degradación controlada)**[cite: 22] | `evidencias/F7-E05.png` |
+
+---
+
+### Detalle Técnico por Experimento
+
+#### **X1 — Terminación abrupta de `search-svc` (`docker kill`)**
+* **Hipótesis:** Matar el proceso principal de `search-svc` (`SIGKILL`) no afectará al monolito en VM-1 y Docker Swarm detectará el fallo de contenedor, reprogramando una nueva instancia `healthy` sin intervención humana.
+* **Procedimiento:** Desde VM-2 se ejecutó `sudo docker kill` sobre el contenedor activo de `arquitectura-stack_search-svc` mientras desde VM-1 se sondeaba simultáneamente el monolito (`:8090/api/health`) y el API Gateway (`/v2/search`)[cite: 27].
+* **Resultado y MTTR:** El monolito mantuvo `HTTP 200` continuo[cite: 27]. El Gateway interceptó la caída en `[+19.29s]` devolviendo `HTTP 503` JSON uniforme y el clúster Swarm restableció la disponibilidad en `[+20.34s]` (**MTTR medido de ~1.05 s** en conmutación)[cite: 27].
+
+#### **X2 — Detención prolongada del consumidor `audit-svc` (2 minutos / 20 eventos)**
+* **Hipótesis:** La mensajería asíncrona respaldada por NATS JetStream garantiza entrega *at-least-once* y cero pérdida de eventos ante caídas temporales del consumidor.
+* **Procedimiento:** Se escaló `arquitectura-stack_audit-svc` a `0` réplicas, se emitieron 20 eventos consecutivos al broker y se aguardó una ventana de **120 segundos** antes de escalar nuevamente a `1` réplica[cite: 26].
+* **Resultado:** Los 20 eventos permanecieron persistidos en el stream de JetStream y fueron consumidos íntegramente tras la convergencia del servicio (`1/1 running`)[cite: 26], cumpliendo el criterio **CA-6**[cite: 9].
+
+#### **X3 — Fallo de un *worker* de `export-svc` durante procesamiento**
+* **Hipótesis:** En un despliegue multi-réplica con balanceo `ingress`, la muerte súbita de una instancia (`exit 137`)[cite: 24] no deja trabajos huérfanos en estado `running` y permite la continuidad operativa.
+* **Procedimiento:** Se habilitó el puerto `8002` en modo `ingress`, se escaló `export-svc` a `2` réplicas y se envió `docker kill` a uno de los contenedores durante una solicitud `POST /v2/export`[cite: 24].
+* **Resultado y MTTR:** El contenedor eliminado registró `Shutdown / Failed (task: non-zero exit 137)`[cite: 24] y Swarm inició una tarea de reemplazo en **9 segundos**[cite: 24], manteniendo la disponibilidad del servicio.
+
+#### **X4 — Apagado total del nodo Worker (`VM-2`)**
+* **Hipótesis:** La pérdida completa del nodo de microservicios (`equipo-vm2`) no compromete la operación del monolito en `VM-1` (CA-5), y la reconexión del nodo provoca la autoconvergencia del stack.
+* **Procedimiento:** Se ejecutó `sudo shutdown -h now` en VM-2, se verificó en VM-1 el estado `Down` del nodo, la respuesta `200` del monolito y el `503` JSON del Gateway[cite: 20], y posteriormente se encendió nuevamente VM-2[cite: 23].
+* **Resultado:** Cero impacto sobre el monolito en VM-1 (`HTTP 200`)[cite: 20]. Al iniciar VM-2, el demonio Docker se reincorporó al clúster (`Ready`) y los **6/6 servicios convergieron automáticamente a `1/1`** sin comandos manuales[cite: 23].
+
+#### **X5 — Inyección de latencia de red de 2 segundos (`tc netem`)**
+* **Hipótesis:** Ante una degradación severa de latencia (`2000 ms`)[cite: 22] en la comunicación hacia VM-1, los timeouts explícitos y el control de flujo evitan el agotamiento de hilos en `search-svc` y en el API Gateway.
+* **Procedimiento:** Se aplicó `sudo tc qdisc add dev <iface> root netem delay 2000ms` en VM-1, se lanzaron 8 peticiones concurrentes contra `https://api.proyecto-web.local/v2/search`[cite: 22] y posteriormente se eliminó la regla `tc`[cite: 22].
+* **Resultado:** Las peticiones respondieron de manera acotada (~`4.05 s` considerando ida y vuelta de red + protección `limit_req` en `0.02 s`–`0.08 s`)[cite: 22], sin bloqueo de trabajadores ni caída del servicio.
+
+---
+
+### Evidencias Capturadas (6.1 — C1)
+
+#### **Evidencia F7-E01 — Terminación y autorecuperación de `search-svc` (`X1`)**
+
+<img width="740" height="893" alt="image" src="https://github.com/user-attachments/assets/9b6ea9a3-041c-48f3-8fa9-1545d459c11b" />
+
+#### **Evidencia F7-E02 — Persistencia de 20 eventos en JetStream y convergencia de `audit-svc` (`X2`)**
+
+<img width="743" height="185" alt="image" src="https://github.com/user-attachments/assets/a546d9d7-ef9f-4f56-a258-7357e778a33e" />
+
+#### **Evidencia F7-E03 — Caída controlada (`exit 137`) y reemplazo de worker en `export-svc` (`X3`)**
+
+<img width="1503" height="554" alt="image" src="https://github.com/user-attachments/assets/fcea2166-aa7c-4747-a992-cce7bc2077d0" />
+
+#### **Evidencia F7-E04 — Apagado de `equipo-vm2` (`Down`), continuidad del monolito (`200`) y reconvergencia `6/6` (`X4`)**
+
+<img width="1513" height="921" alt="image" src="https://github.com/user-attachments/assets/610a29f8-ec92-43cd-9bf9-9afb78c05f32" />
+
+#### **Evidencia F7-E05 — Prueba de latencia `tc netem 2000ms` y tiempos acotados bajo concurrencia (`X5`)**
+
+<img width="1514" height="660" alt="image" src="https://github.com/user-attachments/assets/49585d6e-b0aa-4a44-9ad4-0761d4d8124e" />
+
+---
