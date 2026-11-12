@@ -713,3 +713,51 @@ Durante las pruebas de carga y escalado a 8 contenedores activos en **VM-2 (`equ
 
 <img width="1516" height="701" alt="image" src="https://github.com/user-attachments/assets/a1f305cb-84cf-489e-a601-a66017a4cf49" />
 
+---
+
+---
+
+## 6.3. C3 – Observabilidad: Métricas, Logs y Trazas
+
+### 1. Stack de Telemetría Desplegado (`VM-1` + `VM-2`)
+
+El ecosistema de observabilidad se encuentra versionado en `cna/observability/` y desplegado en **VM-1 (`192.168.1.25`)** mediante contenedores Docker conectados a los endpoints de telemetría de **VM-2 (`192.168.1.26`)**:
+
+| Pilar de Observabilidad | Componente | Puerto | Función en la Arquitectura |
+| :--- | :--- | :--- | :--- |
+| **Métricas RED y Broker** | Prometheus + `prometheus-nats-exporter` | `:9090` / `:7777` | Recolección cada `5s` de `/metrics` en microservicios (`:8000`–`:8003`) y monitoreo JetStream (`/jsz` en `:8222`)[cite: 15]. |
+| **Visualización y Alertas** | Grafana (`CNA Fase 7 - Métricas RED & Cola JetStream`) | `:3000` | Tablero autoprovisionado con paneles de tasa (`RATE`), errores (`ERRORS`), percentiles de latencia (`p50`/`p95`/`p99`) y profundidad de cola del broker[cite: 27]. |
+| **Agregación de Logs** | Grafana Loki | `:3100` | Indexación centralizada de eventos estructurados correlacionados mediante cabecera `X-Request-ID` (`request_id`)[cite: 26]. |
+| **Trazas Distribuidas** | Jaeger All-in-One (receptor OTLP HTTP) | `:16686` / `:4318` | Reconstrucción de cascada entre el API Gateway, `event-bridge`, NATS JetStream y consumidores (`search-svc` / `audit-svc`)[cite: 24]. |
+
+---
+
+### 2. Correlación de Logs, Trazas y Regla de Alerta
+
+1. **Correlación por `request_id` (`req-c3-f7-9901`):** Al inyectar una petición con cabecera `X-Request-ID: req-c3-f7-9901`, Loki permite auditar de forma unificada el paso por los 4 eslabones del flujo asíncrono (`POST /v2/events` en Gateway `4.2 ms` → publicación `events.article.updated` en `event-bridge` → indexación S1 `search-svc` en `3.1 ms` → persistencia S2 `audit-svc` en `2.4 ms`)[cite: 26].
+2. **Traza Distribuida OpenTelemetry (`4bf92f3`):** Jaeger desglosa una duración total de `22 ms` repartida en `3 spans` anidados desde la recepción en Gateway hasta el procesamiento en `event-bridge` (`5 ms`) y la indexación en `search-svc` (`11 ms`)[cite: 24].
+3. **Regla de Alerta (`ServiceUnavailableOr5xxSpike`):** Configurada en `cna/observability/alert_rules.yml` con expresión `up{job="microservices"} == 0 or sum(rate(http_requests_total{code=~"5.."}[1m])) > 0.05` (`for: 10s`, `severity: critical`). Durante el experimento de caída controlada de instancias en `equipo-vm2`, Prometheus transicionó la alerta a estado **`FIRING`**[cite: 25].
+
+---
+
+### 3. Evidencias Capturadas (6.3 — C3)
+
+#### **Evidencia F7-E9 — Tablero de Grafana con métricas RED (`p50`/`p95`/`p99`) y profundidad de cola NATS JetStream**
+
+<img width="1513" height="610" alt="image" src="https://github.com/user-attachments/assets/6764f54b-6f1e-4e4f-8fe0-94fa7dab6912" />
+
+#### **Evidencia F7-E10 — Agregación de logs en Loki filtrada por `request_id=req-c3-f7-9901`**
+
+<img width="1087" height="88" alt="image" src="https://github.com/user-attachments/assets/abbd1319-8082-4b3d-a5e1-7f540e434ce8" />
+
+#### **Evidencia F7-E11 — Traza distribuida OpenTelemetry en Jaeger (Edición → JetStream → Indexación S1)**
+
+<img width="1533" height="248" alt="image" src="https://github.com/user-attachments/assets/6926c4bc-63b8-42a2-beef-9265f1e0263b" />
+
+#### **Evidencia F7-E12 — Regla de alerta `ServiceUnavailableOr5xxSpike` en estado `FIRING`**
+
+<img width="1472" height="597" alt="image" src="https://github.com/user-attachments/assets/c8c5e7ae-8cd1-41f5-a25f-2d073e055baf" />
+
+---
+
+
