@@ -662,3 +662,13 @@ Para validar la tolerancia a fallos de la arquitectura distribuida frente a la l
 <img width="1514" height="660" alt="image" src="https://github.com/user-attachments/assets/49585d6e-b0aa-4a44-9ad4-0761d4d8124e" />
 
 ---
+
+### C2. Escalado Horizontal de Workers (`export-svc`: 1 → 3 Réplicas)
+
+Se sometió el endpoint de exportación (`POST /v2/export`) a una ráfaga concurrente de **50 trabajos** comparando el despliegue base de `1` réplica frente al escalado dinámico a `3` réplicas en Swarm (`mode: ingress`)[cite: 37, 41]:
+
+| Configuración de `export-svc` | Tiempo Total (50 Jobs) | Rendimiento (`trabajos/min`) | Estado en Swarm | Observación Operativa |
+| :--- | :---: | :---: | :---: | :--- |
+| **1 Réplica (`export-svc.1`)** | `0.58 s`[cite: 41] | `5,172.41 trabajos/min`[cite: 41] | `1/1 Running` (`8.35 MiB` RAM) | Procesamiento directo sin sobrecarga de balanceo multi-contenedor[cite: 41]. |
+| **3 Réplicas (`export-svc.1..3`)** | `0.62 s`[cite: 45] | `4,838.71 trabajos/min`[cite: 45] | `3/3 Running` (`~1.28 MiB` RAM c/réplica adicional) | Distribución de carga entre las 3 réplicas mediante *ingress routing mesh*; la diferencia de `+0.04 s` refleja el costo de conmutación del balanceador interno en un mismo nodo[cite: 41, 45]. |
+
