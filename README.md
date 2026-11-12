@@ -551,4 +551,37 @@ Trazas de reintentos (`1/3` a `3/3`) y recuperación del mensaje fallido dentro 
 
 <img width="1514" height="776" alt="image" src="https://github.com/user-attachments/assets/9cb0f5fc-f9e6-41b4-9156-c677c89c29b1" />
 
+---
+
+## Bloque B5 — API Gateway (Nginx) y Orquestación Multi-Nodo (Docker Swarm)
+
+### 1. Arquitectura del API Gateway (`api.proyecto-web.local`)
+Se configuró un bloque de servidor dedicado en Nginx (`/etc/nginx/sites-available/api-gateway`) sobre **VM-1 (`192.168.1.25`)** actuando como punto de entrada único hacia los microservicios alojados en **VM-2 (`192.168.1.26`)**[cite: 1]:
+
+* **Cifrado y Seguridad:** Redirección forzada de HTTP (`80`) a HTTPS (`443`) utilizando exclusivamente **TLS 1.3**, manteniendo las cabeceras de endurecimiento (`Strict-Transport-Security`, `Content-Security-Policy` y `Referrer-Policy`)[cite: 1].
+* **Enrutamiento y Upstreams Explícitos:** Definición de grupos `upstream` independientes (`search_svc` en `:8000`, `audit_svc` en `:8001`, `export_svc` en `:8002` y `media_svc` en `:8003`) bajo el prefijo versionado `/v2/`[cite: 1].
+* **Timeouts y Trazabilidad:** Configuración explícita de `proxy_connect_timeout 5s` y `proxy_read_timeout 15s`, junto con la inyección y propagación de la cabecera `X-Request-ID` (`$request_id`) en todas las peticiones y respuestas[cite: 1].
+* **Resiliencia y Rate Limiting:**
+  * Limitación de tasa (`limit_req_zone` y `limit_req`) sobre `/v2/` devolviendo código **`429 Too Many Requests`** en formato JSON ante exceso de tráfico[cite: 1, 5].
+  * Interceptación de errores de backend (`proxy_intercept_errors on`) devolviendo una respuesta JSON uniforme **`503 Service Unavailable`** con trazabilidad cuando un servicio no está disponible[cite: 1, 2].
+
+---
+
+### 2. Orquestación Multi-Nodo y Gestión de Secretos (Docker Swarm)
+Se inicializó un clúster **Docker Swarm** de dos nodos conectando **VM-1 (`equipo-vm`, Manager/Leader)** y **VM-2 (`equipo-vm2`, Worker)** mediante red `overlay` (`backend-net`) y apertura controlada de puertos en el firewall (`2377/tcp`, `7946/tcp-udp`, `4789/udp`)[cite: 8, 26]:
+
+* **Despliegue en un Comando:** Orquestación declarativa completa mediante `docker stack deploy -c docker-stack.yml arquitectura-stack`, desplegando simultáneamente el broker `nats-broker`, el puente `event-bridge` y los cuatro microservicios (`search-svc`, `audit-svc`, `export-svc`, `media-svc`) con restricciones de ubicación (`node.hostname == equipo-vm2`), límites de recursos (`cpus` y `memory`) y sondas `healthcheck`[cite: 26, 27].
+* **Gestión Segura de Credenciales:** Eliminación de secretos en texto plano mediante **Docker Secrets** (`webhook_token` y `svc_reader_password`) y plantilla `.env.example` versionada (excluyendo `.env` en `.gitignore`)[cite: 26].
+
+---
+
+### 3. Registro de Evidencias (Fase 6 — B5)
+
+| Código | Descripción de la Evidencia | Resultado Validado |
+| :--- | :--- | :--- |
+| **F6-E14** | Validación de sintaxis (`sudo nginx -t`) y configuración del `server block` de `api.proyecto-web.local`[cite: 1]. | `syntax is ok`, TLS 1.3, upstreams explícitos, timeouts, cabeceras de seguridad y manejo JSON de `503`[cite: 1]. |
+| **F6-E15** | Prueba de ráfaga sobre `/v2/search` para validar `limit_req` y formato uniforme de errores[cite: 5]. | Respuesta `HTTP/1.1 429 Too Many Requests` en formato `application/json` con cabecera `X-Request-ID`[cite: 5]. |
+| **F6-E16** | Estado del clúster Swarm multi-nodo, secretos y salud de servicios tras `docker stack deploy`[cite: 26, 27]. | 2 nodos `Ready`, 2 secretos activos y 6/6 servicios en `1/1` réplicas con estado `(healthy)`[cite: 26, 27]. |
+
+
 
