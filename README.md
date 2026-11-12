@@ -520,3 +520,35 @@ También se verificó el rechazo de un token incorrecto (`401`) y el reenvío de
 ```bash
 sudo journalctl -u pocketbase -u pocketbase-event-sender --since "3 minutes ago" --no-pager
 ```
+
+---
+
+## 5.4. B4 – Integración con el Monolito y el Broker
+
+### Arquitectura de Integración Desacoplada
+- **Usuario de Servicio de Solo Lectura**: Cuenta `svc-reader@arquitectura.local` en la colección de autenticación `service_accounts`, con reglas de API restringidas exclusivamente a lectura (`@request.auth.id != ""` en `list`/`view` y *Admins only* en operaciones de escritura).
+- **Webhooks con Token Compartido**: Hook nativo en PocketBase (`pb_hooks/webhooks.pb.js`) disparado ante eventos `created`, `updated` y `deleted` de la colección `contactos`, enviando `X-Webhook-Token` hacia `event-bridge` (`192.168.1.26:8090`).
+- **Event Bridge & NATS JetStream**: Servicio `event-bridge` que rechaza peticiones no autenticadas con HTTP `401`, normaliza el payload al sobre estándar de evento y lo publica en el stream durable `EVENTS` (`events.>`).
+- **Resiliencia y Dead Letter Queue (DLQ)**: Consumidor durable (`search-indexer-worker`) con confirmación explícita (`ack`) y reenvío automático al stream `DLQ_EVENTS` (`dlq.events.failed`) tras 3 intentos fallidos.
+- **Aislamiento de Base de Datos**: Verificado mediante `ss -tnp` en VM-1 sin conexiones entrantes desde VM-2 al almacenamiento interno del monolito.
+
+---
+
+### Evidencias de Integración
+
+#### 1. Evidencia F6-E11: Configuración de Webhooks en el Monolito
+Script `webhooks.pb.js` activo en PocketBase apuntando a `event-bridge` con token compartido:
+
+<img width="741" height="1068" alt="image" src="https://github.com/user-attachments/assets/4dc8b47e-0bb2-40f0-b056-d1c9265f819b" />
+
+#### 2. Evidencia F6-E12: Evento Recibido en el Broker (NATS JetStream)
+Inspección del stream durable `EVENTS` confirmando la recepción y persistencia del evento:
+
+<img width="744" height="779" alt="image" src="https://github.com/user-attachments/assets/794dd315-6040-4755-a55b-36ea916cf44a" />
+
+#### 3. Evidencia F6-E13: Mensaje Forzado a la DLQ tras Reintentos
+Trazas de reintentos (`1/3` a `3/3`) y recuperación del mensaje fallido dentro del stream `DLQ_EVENTS`:
+
+<img width="1514" height="776" alt="image" src="https://github.com/user-attachments/assets/9cb0f5fc-f9e6-41b4-9156-c677c89c29b1" />
+
+
