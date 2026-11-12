@@ -699,4 +699,17 @@ Durante las pruebas de carga y escalado a 8 contenedores activos en **VM-2 (`equ
 * **CPU y Carga del Sistema (`VM-2`):** `100.0% idle` tras estabilización, con *load average* de `0.14, 0.29, 0.35`.
 * **Huella por contenedor:** `nats-broker` (`19.07 MiB` / `7.45%`), `event-bridge` (`14.45 MiB` / `5.64%`), `search-svc` (`8.25 MiB` / `3.22%`), `audit-svc` (`7.26 MiB` / `2.84%`), `media-svc` (`7.15 MiB` / `2.79%`) y `export-svc` (`8.36 MiB` + `1.29 MiB` x2 réplicas).
 
+### 4. Evidencias Capturadas (6.2 — C2)
+
+#### **Evidencia F7-E6 — Benchmark `k6` (`c=10` y `c=50`) Monolito vs Gateway `/v2/search`**
+
+<img width="1114" height="2161" alt="image" src="https://github.com/user-attachments/assets/0070daa4-e2a5-4b37-b847-ba6aff2de181" />
+
+#### **Evidencia F7-E7 — Escalado horizontal de `export-svc` (`1` a `3` réplicas)**
+
+<img width="787" height="86" alt="image" src="https://github.com/user-attachments/assets/a2ad7d32-e625-4759-94b1-7aa782af5bb4" />
+
+#### **Evidencia F7-E8 — Registro de consumo por nodo (`docker stats` y `top` en VM-2)**
+
+<img width="1516" height="701" alt="image" src="https://github.com/user-attachments/assets/a1f305cb-84cf-489e-a601-a66017a4cf49" />
 
