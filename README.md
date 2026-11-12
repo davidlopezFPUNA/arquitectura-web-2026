@@ -663,12 +663,40 @@ Para validar la tolerancia a fallos de la arquitectura distribuida frente a la l
 
 ---
 
-### C2. Escalado Horizontal de Workers (`export-svc`: 1 → 3 Réplicas)
+## 6.2. C2 — Escalabilidad y Rendimiento Comparado (Fase 7)
 
-Se sometió el endpoint de exportación (`POST /v2/export`) a una ráfaga concurrente de **50 trabajos** comparando el despliegue base de `1` réplica frente al escalado dinámico a `3` réplicas en Swarm (`mode: ingress`)[cite: 37, 41]:
+Para evaluar el desempeño de la arquitectura distribuida frente a la línea base monolítica de la Fase 4 (~`50 req/s`, `0` errores), se ejecutaron pruebas de carga con **Grafana k6** a través de HTTPS en el API Gateway (`c=10` y `c=50`), pruebas de escalado horizontal en `export-svc` (`1` vs `3` réplicas ante ráfagas de `50` trabajos) y monitoreo de recursos por nodo mediante `docker stats` y `top`/`htop`.
+
+### 1. Tabla Comparativa de Rendimiento (`k6` — HTTPS Gateway vs Línea Base)
+
+| Escenario / Endpoint | Concurrencia (`VUs`) | Throughput (`req/s`) | Latencia Promedio (`avg`) | Latencia `p(95)` | Tasa de Error / Control |
+| :--- | :---: | :---: | :---: | :---: | :--- |
+| **Línea Base (Fase 4 — Monolito directo)** | `10` | `~50.00 req/s` | `—` | `—` | `0.00%` |
+| **Monolito HTTPS (`proyecto-web.local`)** | `10` | `2,596.80 req/s` | `3.65 ms` | `7.66 ms` | `0.00%` (`38,960 / 38,960` OK) |
+| **Monolito HTTPS (`proyecto-web.local`)** | `50` | `2,775.44 req/s` | `17.59 ms` | `37.25 ms` | `0.00%` (`41,668 / 41,668` OK) |
+| **Microservicio S1 (`GET /v2/search` vía Gateway)** | `10` | `1,054.58 req/s` | `9.19 ms` | `27.14 ms` | `6,839` atendidas (`8,985` limitadas por `limit_req`) |
+| **Microservicio S1 (`GET /v2/search` vía Gateway)** | `50` | `1,284.51 req/s` | `37.88 ms` | `128.65 ms` | `7,343` atendidas (`12,049` limitadas por `limit_req`) |
+
+#### **Interpretación Técnica de Resultados**
+* **Superación amplia de la línea base:** Tanto el monolito como el microservicio `search-svc` a través del API Gateway superan en más de **20x** el umbral de referencia de la Fase 4 (`50 req/s`), sosteniendo **>1,050 req/s** en `c=10` y **>1,280 req/s** en `c=50`.
+* **Costo del salto de red distribuido:** El enrutamiento inverso TLS 1.3 en VM-1 hacia el servicio desplegado en VM-2 (`192.168.1.25 -> 192.168.1.26`) introduce una sobrecarga acotada de **`+5.54 ms`** en `c=10` (`3.65 ms` vs `9.19 ms`) y **`+20.29 ms`** en `c=50` (`17.59 ms` vs `37.88 ms`), producto de la terminación TLS adicional, el cruce de red virtualizada y la inspección `limit_req` en Nginx.
+* **Protección activa contra saturación:** Bajo concurrencia sostenida (`c=50`), el módulo de *rate limiting* del API Gateway absorbe los excedentes devolviendo `429` sin degradar la disponibilidad ni el tiempo de respuesta de los contenedores en VM-2.
+
+### 2. Escalado Horizontal de Workers (`export-svc`: 1 → 3 Réplicas)
+
+Se sometió el endpoint de exportación (`POST /v2/export`) a una ráfaga concurrente de **50 trabajos** comparando el despliegue base de `1` réplica frente al escalado dinámico a `3` réplicas en Swarm (`mode: ingress`):
 
 | Configuración de `export-svc` | Tiempo Total (50 Jobs) | Rendimiento (`trabajos/min`) | Estado en Swarm | Observación Operativa |
 | :--- | :---: | :---: | :---: | :--- |
-| **1 Réplica (`export-svc.1`)** | `0.58 s`[cite: 41] | `5,172.41 trabajos/min`[cite: 41] | `1/1 Running` (`8.35 MiB` RAM) | Procesamiento directo sin sobrecarga de balanceo multi-contenedor[cite: 41]. |
-| **3 Réplicas (`export-svc.1..3`)** | `0.62 s`[cite: 45] | `4,838.71 trabajos/min`[cite: 45] | `3/3 Running` (`~1.28 MiB` RAM c/réplica adicional) | Distribución de carga entre las 3 réplicas mediante *ingress routing mesh*; la diferencia de `+0.04 s` refleja el costo de conmutación del balanceador interno en un mismo nodo[cite: 41, 45]. |
+| **1 Réplica (`export-svc.1`)** | `0.58 s` | `5,172.41 trabajos/min` | `1/1 Running` (`8.35 MiB` RAM) | Procesamiento directo sin sobrecarga de balanceo multi-contenedor. |
+| **3 Réplicas (`export-svc.1..3`)** | `0.62 s` | `4,838.71 trabajos/min` | `3/3 Running` (`~1.28 MiB` RAM c/réplica adicional) | Distribución de carga entre las 3 réplicas mediante *ingress routing mesh*; la diferencia de `+0.04 s` refleja el costo de conmutación del balanceador interno en un mismo nodo. |
+
+### 3. Consumo de Recursos por Nodo (`docker stats` y `top`)
+
+Durante las pruebas de carga y escalado a 8 contenedores activos en **VM-2 (`equipo-vm2`)**, el consumo se mantuvo altamente eficiente dentro de los límites asignados (`256 MiB` por servicio):
+
+* **Memoria total en VM-2:** `502.4 MiB` usados de `1,967.7 MiB` totales (`1,465.3 MiB` disponibles).
+* **CPU y Carga del Sistema (`VM-2`):** `100.0% idle` tras estabilización, con *load average* de `0.14, 0.29, 0.35`.
+* **Huella por contenedor:** `nats-broker` (`19.07 MiB` / `7.45%`), `event-bridge` (`14.45 MiB` / `5.64%`), `search-svc` (`8.25 MiB` / `3.22%`), `audit-svc` (`7.26 MiB` / `2.84%`), `media-svc` (`7.15 MiB` / `2.79%`) y `export-svc` (`8.36 MiB` + `1.29 MiB` x2 réplicas).
+
 
