@@ -128,14 +128,14 @@ flowchart TD
 
 ### ADR-008: Plataforma de Orquestación Multi-Nodo
 * **Estatus:** Aprobado
-* **Contexto:** La infraestructura asignada consta de dos máquinas virtuales en VirtualBox (`VM-1` Manager y `VM-2` Worker, con 2 vCPU y 2 GB de RAM cada una sobre Ubuntu Server 24.04.5 LTS)[cite: 9, 19]. Se requiere orquestación multi-nodo, auto-reparación (*self-healing*), escalamiento horizontal de réplicas y gestión nativa de secretos con bajo consumo de recursos[cite: 35].
-* **Decisión:** Utilizar **Docker Swarm** (`docker stack deploy -c docker-stack.yml`) como orquestador del clúster multi-nodo[cite: 3, 19, 20].
+* **Contexto:** La infraestructura asignada consta de dos máquinas virtuales en VirtualBox (`VM-1` Manager y `VM-2` Worker, con 2 vCPU y 2 GB de RAM cada una sobre Ubuntu Server 24.04.5 LTS). Se requiere orquestación multi-nodo, auto-reparación (*self-healing*), escalamiento horizontal de réplicas y gestión nativa de secretos con bajo consumo de recursos.
+* **Decisión:** Utilizar **Docker Swarm** (`docker stack deploy -c docker-stack.yml`) como orquestador del clúster multi-nodo.
 * **Alternativas Descartadas:**
-  * *k3s (Lightweight Kubernetes):* Descartado porque el consumo base del plano de control en memoria RAM sobrepasa la capacidad disponible (2 GB RAM por nodo) e inestabiliza los contenedores[cite: 35].
-  * *Docker Compose aislado:* Descartado en el despliegue final por carecer de programación distribuida entre múltiples nodos (`VM-1` y `VM-2`), red *overlay* nativa cifrada y auto-reparación automática ante caída de réplicas o nodos[cite: 19, 35].
+  * *k3s (Lightweight Kubernetes):* Descartado porque el consumo base del plano de control en memoria RAM sobrepasa la capacidad disponible (2 GB RAM por nodo) e inestabiliza los contenedores.
+  * *Docker Compose aislado:* Descartado en el despliegue final por carecer de programación distribuida entre múltiples nodos (`VM-1` y `VM-2`), red *overlay* nativa cifrada y auto-reparación automática ante caída de réplicas o nodos.
 * **Consecuencias:**
-  * *Positivas:* Huella mínima de memoria del plano de control integrado en Docker Engine, redes *overlay* nativas, `Docker Swarm Secrets` montados en memoria y convergencia automática ante fallos[cite: 19, 22, 35].
-  * *Negativas:* Menor ecosistema de operadores avanzados frente a Kubernetes[cite: 35].
+  * *Positivas:* Huella mínima de memoria del plano de control integrado en Docker Engine, redes *overlay* nativas, `Docker Swarm Secrets` montados en memoria y convergencia automática ante fallos.
+  * *Negativas:* Menor ecosistema de operadores avanzados frente a Kubernetes.
 
 ---
 
@@ -546,22 +546,22 @@ Trazas de reintentos (`1/3` a `3/3`) y recuperación del mensaje fallido dentro 
 ## Bloque B5 — API Gateway (Nginx) y Orquestación Multi-Nodo (Docker Swarm)
 
 ### 1. Arquitectura del API Gateway (`api.proyecto-web.local`)
-Se configuró un bloque de servidor dedicado en Nginx (`/etc/nginx/sites-available/api-gateway`) sobre **VM-1 (`192.168.1.25`)** actuando como punto de entrada único hacia los microservicios alojados en **VM-2 (`192.168.1.26`)**[cite: 24]:
+Se configuró un bloque de servidor dedicado en Nginx (`/etc/nginx/sites-available/api-gateway`) sobre **VM-1 (`192.168.1.25`)** actuando como punto de entrada único hacia los microservicios alojados en **VM-2 (`192.168.1.26`)**:
 
-* **Cifrado y Seguridad:** Redirección forzada de HTTP (`80`) a HTTPS (`443`) utilizando exclusivamente **TLS 1.3**, manteniendo las cabeceras de endurecimiento (`Strict-Transport-Security`, `Content-Security-Policy` y `Referrer-Policy`)[cite: 24].
-* **Enrutamiento y Upstreams Explícitos:** Definición de grupos `upstream` independientes (`search_svc` en `:8000`, `audit_svc` en `:8001`, `export_svc` en `:8002` y `media_svc` en `:8003`) bajo el prefijo versionado `/v2/`[cite: 24].
-* **Timeouts y Trazabilidad:** Configuración explícita de `proxy_connect_timeout 5s` y `proxy_read_timeout 15s`, junto con la inyección y propagación de la cabecera `X-Request-ID` (`$request_id`) en todas las peticiones y respuestas[cite: 24].
+* **Cifrado y Seguridad:** Redirección forzada de HTTP (`80`) a HTTPS (`443`) utilizando exclusivamente **TLS 1.3**, manteniendo las cabeceras de endurecimiento (`Strict-Transport-Security`, `Content-Security-Policy` y `Referrer-Policy`).
+* **Enrutamiento y Upstreams Explícitos:** Definición de grupos `upstream` independientes (`search_svc` en `:8000`, `audit_svc` en `:8001`, `export_svc` en `:8002` y `media_svc` en `:8003`) bajo el prefijo versionado `/v2/`.
+* **Timeouts y Trazabilidad:** Configuración explícita de `proxy_connect_timeout 5s` y `proxy_read_timeout 15s`, junto con la inyección y propagación de la cabecera `X-Request-ID` (`$request_id`) en todas las peticiones y respuestas.
 * **Resiliencia y Rate Limiting:**
-  * Limitación de tasa (`limit_req_zone` y `limit_req`) sobre `/v2/` devolviendo código **`429 Too Many Requests`** en formato JSON ante exceso de tráfico[cite: 24, 25].
-  * Interceptación de errores de backend (`proxy_intercept_errors on`) devolviendo una respuesta JSON uniforme **`503 Service Unavailable`** con trazabilidad cuando un servicio no está disponible[cite: 24].
+  * Limitación de tasa (`limit_req_zone` y `limit_req`) sobre `/v2/` devolviendo código **`429 Too Many Requests`** en formato JSON ante exceso de tráfico.
+  * Interceptación de errores de backend (`proxy_intercept_errors on`) devolviendo una respuesta JSON uniforme **`503 Service Unavailable`** con trazabilidad cuando un servicio no está disponible.
 
 ---
 
 ### 2. Orquestación Multi-Nodo y Gestión de Secretos (Docker Swarm)
-Se inicializó un clúster **Docker Swarm** de dos nodos conectando **VM-1 (`equipo-vm`, Manager/Leader)** y **VM-2 (`equipo-vm2`, Worker)** mediante red `overlay` (`backend-net`) y apertura controlada de puertos en el firewall (`2377/tcp`, `7946/tcp-udp`, `4789/udp`)[cite: 22, 23]:
+Se inicializó un clúster **Docker Swarm** de dos nodos conectando **VM-1 (`equipo-vm`, Manager/Leader)** y **VM-2 (`equipo-vm2`, Worker)** mediante red `overlay` (`backend-net`) y apertura controlada de puertos en el firewall (`2377/tcp`, `7946/tcp-udp`, `4789/udp`):
 
-* **Despliegue en un Comando:** Orquestación declarativa completa mediante `docker stack deploy -c docker-stack.yml arquitectura-stack`, desplegando simultáneamente el broker `nats-broker`, el puente `event-bridge` y los cuatro microservicios (`search-svc`, `audit-svc`, `export-svc`, `media-svc`) con restricciones de ubicación (`node.hostname == equipo-vm2`), límites de recursos (`cpus` y `memory`) y sondas `healthcheck`[cite: 22, 23].
-* **Gestión Segura de Credenciales:** Eliminación de secretos en texto plano mediante **Docker Secrets** (`webhook_token` y `svc_reader_password`) y plantilla `.env.example` versionada (excluyendo `.env` en `.gitignore`)[cite: 22].
+* **Despliegue en un Comando:** Orquestación declarativa completa mediante `docker stack deploy -c docker-stack.yml arquitectura-stack`, desplegando simultáneamente el broker `nats-broker`, el puente `event-bridge` y los cuatro microservicios (`search-svc`, `audit-svc`, `export-svc`, `media-svc`) con restricciones de ubicación (`node.hostname == equipo-vm2`), límites de recursos (`cpus` y `memory`) y sondas `healthcheck`.
+* **Gestión Segura de Credenciales:** Eliminación de secretos en texto plano mediante **Docker Secrets** (`webhook_token` y `svc_reader_password`) y plantilla `.env.example` versionada (excluyendo `.env` en `.gitignore`).
 
 ---
 
@@ -569,9 +569,9 @@ Se inicializó un clúster **Docker Swarm** de dos nodos conectando **VM-1 (`equ
 
 | Código | Descripción de la Evidencia | Resultado Validado |
 | :--- | :--- | :--- |
-| **F6-E14** | Validación de sintaxis (`sudo nginx -t`) y configuración del `server block` de `api.proyecto-web.local`[cite: 24]. | `syntax is ok`, TLS 1.3, upstreams explícitos, timeouts, cabeceras de seguridad y manejo JSON de `503`[cite: 24]. |
-| **F6-E15** | Prueba de ráfaga sobre `/v2/search` para validar `limit_req` y formato uniforme de errores[cite: 25]. | Respuesta `HTTP/1.1 429 Too Many Requests` en formato `application/json` con cabecera `X-Request-ID`[cite: 25]. |
-| **F6-E16** | Estado del clúster Swarm multi-nodo, secretos y salud de servicios tras `docker stack deploy`[cite: 22, 26]. | 2 nodos `Ready`, 2 secretos activos y 6/6 servicios en `1/1` réplicas con estado `(healthy)`[cite: 22, 26]. |
+| **F6-E14** | Validación de sintaxis (`sudo nginx -t`) y configuración del `server block` de `api.proyecto-web.local`. | `syntax is ok`, TLS 1.3, upstreams explícitos, timeouts, cabeceras de seguridad y manejo JSON de `503`. |
+| **F6-E15** | Prueba de ráfaga sobre `/v2/search` para validar `limit_req` y formato uniforme de errores. | Respuesta `HTTP/1.1 429 Too Many Requests` en formato `application/json` con cabecera `X-Request-ID`. |
+| **F6-E16** | Estado del clúster Swarm multi-nodo, secretos y salud de servicios tras `docker stack deploy`. | 2 nodos `Ready`, 2 secretos activos y 6/6 servicios en `1/1` réplicas con estado `(healthy)`. |
 
 #### **Evidencia F6-E14 — Configuración y validación de sintaxis del API Gateway**
 <img width="748" height="1161" alt="image" src="https://github.com/user-attachments/assets/defa9202-b401-4c38-9085-b9aa01ccc35e" />
@@ -586,17 +586,17 @@ Se inicializó un clúster **Docker Swarm** de dos nodos conectando **VM-1 (`equ
 
 ## 6.1. C1 — Resiliencia y Experimentos de Caos (Fase 7)
 
-Para validar la tolerancia a fallos de la arquitectura distribuida frente a la línea base monolítica de la Fase 4[cite: 9], se ejecutaron los **5 experimentos de caos obligatorios (X1–X5)** documentando hipótesis, procedimiento, resultados y tiempos de recuperación (**MTTR**)[cite: 9].
+Para validar la tolerancia a fallos de la arquitectura distribuida frente a la línea base monolítica de la Fase 4, se ejecutaron los **5 experimentos de caos obligatorios (X1–X5)** documentando hipótesis, procedimiento, resultados y tiempos de recuperación (**MTTR**).
 
 ### Resumen de Resultados (Tabla de Experimentos)
 
 | ID | Experimento | Resultado Esperado | Resultado Obtenido | MTTR / Tiempo Medido | Evidencia |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **X1** | `docker kill` del contenedor de S1 (`search-svc`)[cite: 9] | Monolito responde `200`; `/v2/search` responde `503` JSON; el orquestador lo recrea solo[cite: 9] | El monolito en VM-1 mantuvo disponibilidad (`HTTP 200`)[cite: 27]; `/v2/search` devolvió `HTTP 503` JSON uniforme en `[+19.29s]` durante el `docker kill` y Docker Swarm recreó la réplica automáticamente en `[+20.34s]` (`1/1`)[cite: 27] | **~1.05 s (Gateway) / ~10 s (Swarm)**[cite: 27] | `evidencias/F7-E01.png` |
-| **X2** | Detener S2 (`audit-svc`) durante 2 minutos mientras se editan/publican 20 eventos[cite: 9] | Al volver, S2 procesa los 20 eventos pendientes con cero pérdida (CA-6)[cite: 9] | Durante los `120 s` con `audit-svc=0`[cite: 26], NATS JetStream retuvo los 20 mensajes en el stream `EVENTS`; al escalar nuevamente a `1/1`, el servicio convergió (`Audit Service listo en puerto 8082`) y procesó la cola sin pérdida[cite: 26] | **120 s (ventana) + <10 s reconexión**[cite: 26] | `evidencias/F7-E02.png` |
-| **X3** | Matar un *worker* de S3 (`export-svc`) a mitad de un job[cite: 9] | El job vuelve a la cola y otro *worker* lo completa sin quedar en `running` indefinidamente[cite: 9] | Con `export-svc` escalado a 2 réplicas en modo `ingress`, al aplicar `docker kill` (`task: non-zero exit 137`) sobre un contenedor, la segunda réplica sostuvo el servicio y Swarm levantó el reemplazo en `9 s` sin tareas bloqueadas[cite: 24] | **~9 s**[cite: 24] | `evidencias/F7-E03.png` |
-| **X4** | Apagar VM-2 completa (`equipo-vm2`)[cite: 9] | El monolito sigue operativo (CA-5); al encender VM-2 el sistema converge sin intervención manual[cite: 9] | Con `equipo-vm2` en estado `Down`, el monolito en VM-1 continuó respondiendo `HTTP 200` y el Gateway aisló el fallo con `503` JSON[cite: 20]; al reencender VM-2, el nodo pasó a `Ready` y los `6/6` servicios convergieron solos a `1/1`[cite: 23] | **<15 s post-arranque**[cite: 23] | `evidencias/F7-E04a.png`<br>`evidencias/F7-E04b.png` |
-| **X5** | Latencia artificial de `2 s` (`2000 ms`) hacia la API del monolito mediante `tc netem`[cite: 9] | S1 aplica timeout, reintentos con *backoff* exponencial e interruptor de circuito sin saturar hilos[cite: 9] | Con `netem delay 2000ms` activo, las 8 peticiones concurrentes completaron de forma acotada (~`4.05 s` incluyendo RTT ida/vuelta y protección `limit_req` en `0.02 s`–`0.08 s`)[cite: 22], evitando el bloqueo indefinido de *workers* y normalizando al retirar la regla `tc`[cite: 22] | **0 s (degradación controlada)**[cite: 22] | `evidencias/F7-E05.png` |
+| **X1** | `docker kill` del contenedor de S1 (`search-svc`) | Monolito responde `200`; `/v2/search` responde `503` JSON; el orquestador lo recrea solo | El monolito en VM-1 mantuvo disponibilidad (`HTTP 200`); `/v2/search` devolvió `HTTP 503` JSON uniforme en `[+19.29s]` durante el `docker kill` y Docker Swarm recreó la réplica automáticamente en `[+20.34s]` (`1/1`) | **~1.05 s (Gateway) / ~10 s (Swarm)** | `evidencias/F7-E01.png` |
+| **X2** | Detener S2 (`audit-svc`) durante 2 minutos mientras se editan/publican 20 eventos | Al volver, S2 procesa los 20 eventos pendientes con cero pérdida (CA-6) | Durante los `120 s` con `audit-svc=0`, NATS JetStream retuvo los 20 mensajes en el stream `EVENTS`; al escalar nuevamente a `1/1`, el servicio convergió (`Audit Service listo en puerto 8082`) y procesó la cola sin pérdida | **120 s (ventana) + <10 s reconexión** | `evidencias/F7-E02.png` |
+| **X3** | Matar un *worker* de S3 (`export-svc`) a mitad de un job | El job vuelve a la cola y otro *worker* lo completa sin quedar en `running` indefinidamente | Con `export-svc` escalado a 2 réplicas en modo `ingress`, al aplicar `docker kill` (`task: non-zero exit 137`) sobre un contenedor, la segunda réplica sostuvo el servicio y Swarm levantó el reemplazo en `9 s` sin tareas bloqueadas | **~9 s** | `evidencias/F7-E03.png` |
+| **X4** | Apagar VM-2 completa (`equipo-vm2`) | El monolito sigue operativo (CA-5); al encender VM-2 el sistema converge sin intervención manual | Con `equipo-vm2` en estado `Down`, el monolito en VM-1 continuó respondiendo `HTTP 200` y el Gateway aisló el fallo con `503` JSON; al reencender VM-2, el nodo pasó a `Ready` y los `6/6` servicios convergieron solos a `1/1` | **<15 s post-arranque** | `evidencias/F7-E04a.png`<br>`evidencias/F7-E04b.png` |
+| **X5** | Latencia artificial de `2 s` (`2000 ms`) hacia la API del monolito mediante `tc netem` | S1 aplica timeout, reintentos con *backoff* exponencial e interruptor de circuito sin saturar hilos | Con `netem delay 2000ms` activo, las 8 peticiones concurrentes completaron de forma acotada (~`4.05 s` incluyendo RTT ida/vuelta y protección `limit_req` en `0.02 s`–`0.08 s`), evitando el bloqueo indefinido de *workers* y normalizando al retirar la regla `tc` | **0 s (degradación controlada)** | `evidencias/F7-E05.png` |
 
 ---
 
@@ -604,28 +604,28 @@ Para validar la tolerancia a fallos de la arquitectura distribuida frente a la l
 
 #### **X1 — Terminación abrupta de `search-svc` (`docker kill`)**
 * **Hipótesis:** Matar el proceso principal de `search-svc` (`SIGKILL`) no afectará al monolito en VM-1 y Docker Swarm detectará el fallo de contenedor, reprogramando una nueva instancia `healthy` sin intervención humana.
-* **Procedimiento:** Desde VM-2 se ejecutó `sudo docker kill` sobre el contenedor activo de `arquitectura-stack_search-svc` mientras desde VM-1 se sondeaba simultáneamente el monolito (`:8090/api/health`) y el API Gateway (`/v2/search`)[cite: 27].
-* **Resultado y MTTR:** El monolito mantuvo `HTTP 200` continuo[cite: 27]. El Gateway interceptó la caída en `[+19.29s]` devolviendo `HTTP 503` JSON uniforme y el clúster Swarm restableció la disponibilidad en `[+20.34s]` (**MTTR medido de ~1.05 s** en conmutación)[cite: 27].
+* **Procedimiento:** Desde VM-2 se ejecutó `sudo docker kill` sobre el contenedor activo de `arquitectura-stack_search-svc` mientras desde VM-1 se sondeaba simultáneamente el monolito (`:8090/api/health`) y el API Gateway (`/v2/search`).
+* **Resultado y MTTR:** El monolito mantuvo `HTTP 200` continuo. El Gateway interceptó la caída en `[+19.29s]` devolviendo `HTTP 503` JSON uniforme y el clúster Swarm restableció la disponibilidad en `[+20.34s]` (**MTTR medido de ~1.05 s** en conmutación).
 
 #### **X2 — Detención prolongada del consumidor `audit-svc` (2 minutos / 20 eventos)**
 * **Hipótesis:** La mensajería asíncrona respaldada por NATS JetStream garantiza entrega *at-least-once* y cero pérdida de eventos ante caídas temporales del consumidor.
-* **Procedimiento:** Se escaló `arquitectura-stack_audit-svc` a `0` réplicas, se emitieron 20 eventos consecutivos al broker y se aguardó una ventana de **120 segundos** antes de escalar nuevamente a `1` réplica[cite: 26].
-* **Resultado:** Los 20 eventos permanecieron persistidos en el stream de JetStream y fueron consumidos íntegramente tras la convergencia del servicio (`1/1 running`)[cite: 26], cumpliendo el criterio **CA-6**[cite: 9].
+* **Procedimiento:** Se escaló `arquitectura-stack_audit-svc` a `0` réplicas, se emitieron 20 eventos consecutivos al broker y se aguardó una ventana de **120 segundos** antes de escalar nuevamente a `1` réplica.
+* **Resultado:** Los 20 eventos permanecieron persistidos en el stream de JetStream y fueron consumidos íntegramente tras la convergencia del servicio (`1/1 running`), cumpliendo el criterio **CA-6**.
 
 #### **X3 — Fallo de un *worker* de `export-svc` durante procesamiento**
-* **Hipótesis:** En un despliegue multi-réplica con balanceo `ingress`, la muerte súbita de una instancia (`exit 137`)[cite: 24] no deja trabajos huérfanos en estado `running` y permite la continuidad operativa.
-* **Procedimiento:** Se habilitó el puerto `8002` en modo `ingress`, se escaló `export-svc` a `2` réplicas y se envió `docker kill` a uno de los contenedores durante una solicitud `POST /v2/export`[cite: 24].
-* **Resultado y MTTR:** El contenedor eliminado registró `Shutdown / Failed (task: non-zero exit 137)`[cite: 24] y Swarm inició una tarea de reemplazo en **9 segundos**[cite: 24], manteniendo la disponibilidad del servicio.
+* **Hipótesis:** En un despliegue multi-réplica con balanceo `ingress`, la muerte súbita de una instancia (`exit 137`) no deja trabajos huérfanos en estado `running` y permite la continuidad operativa.
+* **Procedimiento:** Se habilitó el puerto `8002` en modo `ingress`, se escaló `export-svc` a `2` réplicas y se envió `docker kill` a uno de los contenedores durante una solicitud `POST /v2/export`.
+* **Resultado y MTTR:** El contenedor eliminado registró `Shutdown / Failed (task: non-zero exit 137)` y Swarm inició una tarea de reemplazo en **9 segundos**, manteniendo la disponibilidad del servicio.
 
 #### **X4 — Apagado total del nodo Worker (`VM-2`)**
 * **Hipótesis:** La pérdida completa del nodo de microservicios (`equipo-vm2`) no compromete la operación del monolito en `VM-1` (CA-5), y la reconexión del nodo provoca la autoconvergencia del stack.
-* **Procedimiento:** Se ejecutó `sudo shutdown -h now` en VM-2, se verificó en VM-1 el estado `Down` del nodo, la respuesta `200` del monolito y el `503` JSON del Gateway[cite: 20], y posteriormente se encendió nuevamente VM-2[cite: 23].
-* **Resultado:** Cero impacto sobre el monolito en VM-1 (`HTTP 200`)[cite: 20]. Al iniciar VM-2, el demonio Docker se reincorporó al clúster (`Ready`) y los **6/6 servicios convergieron automáticamente a `1/1`** sin comandos manuales[cite: 23].
+* **Procedimiento:** Se ejecutó `sudo shutdown -h now` en VM-2, se verificó en VM-1 el estado `Down` del nodo, la respuesta `200` del monolito y el `503` JSON del Gateway, y posteriormente se encendió nuevamente VM-2.
+* **Resultado:** Cero impacto sobre el monolito en VM-1 (`HTTP 200`). Al iniciar VM-2, el demonio Docker se reincorporó al clúster (`Ready`) y los **6/6 servicios convergieron automáticamente a `1/1`** sin comandos manuales.
 
 #### **X5 — Inyección de latencia de red de 2 segundos (`tc netem`)**
-* **Hipótesis:** Ante una degradación severa de latencia (`2000 ms`)[cite: 22] en la comunicación hacia VM-1, los timeouts explícitos y el control de flujo evitan el agotamiento de hilos en `search-svc` y en el API Gateway.
-* **Procedimiento:** Se aplicó `sudo tc qdisc add dev <iface> root netem delay 2000ms` en VM-1, se lanzaron 8 peticiones concurrentes contra `https://api.proyecto-web.local/v2/search`[cite: 22] y posteriormente se eliminó la regla `tc`[cite: 22].
-* **Resultado:** Las peticiones respondieron de manera acotada (~`4.05 s` considerando ida y vuelta de red + protección `limit_req` en `0.02 s`–`0.08 s`)[cite: 22], sin bloqueo de trabajadores ni caída del servicio.
+* **Hipótesis:** Ante una degradación severa de latencia (`2000 ms`) en la comunicación hacia VM-1, los timeouts explícitos y el control de flujo evitan el agotamiento de hilos en `search-svc` y en el API Gateway.
+* **Procedimiento:** Se aplicó `sudo tc qdisc add dev <iface> root netem delay 2000ms` en VM-1, se lanzaron 8 peticiones concurrentes contra `https://api.proyecto-web.local/v2/search` y posteriormente se eliminó la regla `tc`.
+* **Resultado:** Las peticiones respondieron de manera acotada (~`4.05 s` considerando ida y vuelta de red + protección `limit_req` en `0.02 s`–`0.08 s`), sin bloqueo de trabajadores ni caída del servicio.
 
 ---
 
@@ -715,18 +715,18 @@ El ecosistema de observabilidad se encuentra versionado en `cna/observability/` 
 
 | Pilar de Observabilidad | Componente | Puerto | Función en la Arquitectura |
 | :--- | :--- | :--- | :--- |
-| **Métricas RED y Broker** | Prometheus + `prometheus-nats-exporter` | `:9090` / `:7777` | Recolección cada `5s` de `/metrics` en microservicios (`:8000`–`:8003`) y monitoreo JetStream (`/jsz` en `:8222`)[cite: 15]. |
-| **Visualización y Alertas** | Grafana (`CNA Fase 7 - Métricas RED & Cola JetStream`) | `:3000` | Tablero autoprovisionado con paneles de tasa (`RATE`), errores (`ERRORS`), percentiles de latencia (`p50`/`p95`/`p99`) y profundidad de cola del broker[cite: 27]. |
-| **Agregación de Logs** | Grafana Loki | `:3100` | Indexación centralizada de eventos estructurados correlacionados mediante cabecera `X-Request-ID` (`request_id`)[cite: 26]. |
-| **Trazas Distribuidas** | Jaeger All-in-One (receptor OTLP HTTP) | `:16686` / `:4318` | Reconstrucción de cascada entre el API Gateway, `event-bridge`, NATS JetStream y consumidores (`search-svc` / `audit-svc`)[cite: 24]. |
+| **Métricas RED y Broker** | Prometheus + `prometheus-nats-exporter` | `:9090` / `:7777` | Recolección cada `5s` de `/metrics` en microservicios (`:8000`–`:8003`) y monitoreo JetStream (`/jsz` en `:8222`). |
+| **Visualización y Alertas** | Grafana (`CNA Fase 7 - Métricas RED & Cola JetStream`) | `:3000` | Tablero autoprovisionado con paneles de tasa (`RATE`), errores (`ERRORS`), percentiles de latencia (`p50`/`p95`/`p99`) y profundidad de cola del broker. |
+| **Agregación de Logs** | Grafana Loki | `:3100` | Indexación centralizada de eventos estructurados correlacionados mediante cabecera `X-Request-ID` (`request_id`). |
+| **Trazas Distribuidas** | Jaeger All-in-One (receptor OTLP HTTP) | `:16686` / `:4318` | Reconstrucción de cascada entre el API Gateway, `event-bridge`, NATS JetStream y consumidores (`search-svc` / `audit-svc`). |
 
 ---
 
 ### 2. Correlación de Logs, Trazas y Regla de Alerta
 
-1. **Correlación por `request_id` (`req-c3-f7-9901`):** Al inyectar una petición con cabecera `X-Request-ID: req-c3-f7-9901`, Loki permite auditar de forma unificada el paso por los 4 eslabones del flujo asíncrono (`POST /v2/events` en Gateway `4.2 ms` → publicación `events.article.updated` en `event-bridge` → indexación S1 `search-svc` en `3.1 ms` → persistencia S2 `audit-svc` en `2.4 ms`)[cite: 26].
-2. **Traza Distribuida OpenTelemetry (`4bf92f3`):** Jaeger desglosa una duración total de `22 ms` repartida en `3 spans` anidados desde la recepción en Gateway hasta el procesamiento en `event-bridge` (`5 ms`) y la indexación en `search-svc` (`11 ms`)[cite: 24].
-3. **Regla de Alerta (`ServiceUnavailableOr5xxSpike`):** Configurada en `cna/observability/alert_rules.yml` con expresión `up{job="microservices"} == 0 or sum(rate(http_requests_total{code=~"5.."}[1m])) > 0.05` (`for: 10s`, `severity: critical`). Durante el experimento de caída controlada de instancias en `equipo-vm2`, Prometheus transicionó la alerta a estado **`FIRING`**[cite: 25].
+1. **Correlación por `request_id` (`req-c3-f7-9901`):** Al inyectar una petición con cabecera `X-Request-ID: req-c3-f7-9901`, Loki permite auditar de forma unificada el paso por los 4 eslabones del flujo asíncrono (`POST /v2/events` en Gateway `4.2 ms` → publicación `events.article.updated` en `event-bridge` → indexación S1 `search-svc` en `3.1 ms` → persistencia S2 `audit-svc` en `2.4 ms`).
+2. **Traza Distribuida OpenTelemetry (`4bf92f3`):** Jaeger desglosa una duración total de `22 ms` repartida en `3 spans` anidados desde la recepción en Gateway hasta el procesamiento en `event-bridge` (`5 ms`) y la indexación en `search-svc` (`11 ms`).
+3. **Regla de Alerta (`ServiceUnavailableOr5xxSpike`):** Configurada en `cna/observability/alert_rules.yml` con expresión `up{job="microservices"} == 0 or sum(rate(http_requests_total{code=~"5.."}[1m])) > 0.05` (`for: 10s`, `severity: critical`). Durante el experimento de caída controlada de instancias en `equipo-vm2`, Prometheus transicionó la alerta a estado **`FIRING`**.
 
 ---
 
@@ -799,7 +799,11 @@ Se amplía el registro de riesgos y hallazgos de seguridad con tres hallazgos id
 | :--- | :--- | :--- | :---: | :---: | :--- |
 | **SEC-F7-01** | `search-svc`, `audit-svc`, `export-svc`, `media-svc` (`Go stdlib v1.22.12`) | Vulnerabilidad `CVE-2025-68121` en `crypto/tls` (validación incorrecta de certificados durante reanudación de sesión TLS) detectada por Trivy. | **CRÍTICA** | **Aceptado temporalmente (Mitigado)** | Los 4 microservicios se ejecutan en una red privada Docker Swarm sin exposición externa ni terminación TLS propia; todo el tráfico externo pasa por Caddy Gateway y el tráfico interno viaja por red overlay aislada. Se programa migración de builder a `golang:1.25-alpine` en el próximo release. |
 | **SEC-F7-02** | `event-bridge:1.0.0` (`npm` / `node-tar 6.2.1`) | Vulnerabilidad `CVE-2026-59873` (DoS mediante descompresión gzip maliciosa en librería `tar` incluida dentro del gestor global `npm`). | **CRÍTICA** | **Aceptado como riesgo (No explotable en runtime)** | Las dependencias directas de la aplicación (`nats`, `nkeys.js`, `tweetnacl`) arrojaron **0 vulnerabilidades**. El paquete `tar` pertenece exclusivamente a la CLI de `npm`, la cual no se ejecuta ni procesa archivos externos en tiempo de ejecución del contenedor. |
+<<<<<<< HEAD
 | **SEC-F7-04** | Monolito `pocketbase-svc:1.0.0` (`Alpine` + binario Go `v0.22.58`) | Exposición potencial de consola administrativa (`/_/`) y superficie de paquetes base del contenedor monolítico auditable vía SBOM CycloneDX. | **MEDIA** | **Mitigado** | Acceso perimetral filtrado exclusivamente por Caddy API Gateway (`TLS` + rutas explícitas), contenedor ejecutándose bajo usuario no-root (`1000:1000`), volumen persistente aislado (`pb_data`) y SBOM generado con Syft en `cna/security/`. |
+=======
+| **SEC-F7-03** | Integración Monolito ↔ `event-bridge` (`webhook_token`) | Exposición prolongada de token estático de integración webhook/API entre PocketBase y el puente de eventos. | **ALTA** | **Corregido** | Se implementó rotación inmutable mediante **Docker Swarm Secrets** (`webhook_token` → `webhook_token_v2`) montado en `/run/secrets/webhook_token`, permitiendo revocar y rotar credenciales en caliente sin reconstruir imágenes ni detener el servicio. |
+>>>>>>> 1aa107b (Docs: unifica referencias al monolito PocketBase/SQLite en README y ADRs)
 
 ---
 
@@ -819,6 +823,7 @@ Se amplía el registro de riesgos y hallazgos de seguridad con tres hallazgos id
 
 Continuación exacta de la matriz mínima de pruebas del TP I (`P01`–`P25`), alineada 1:1 con la **Tabla 11 (Matriz de Evidencias Esperadas)** desde **`P26` (`F5-E1`)** hasta **`P62` (`F7-E14`)** sobre el monolito **PocketBase (`v0.22.58` / SQLite)** y su evolución Cloud Native:
 
+<<<<<<< HEAD
 | Prueba | Evidencia | Fase / Ítem | Prueba y Evidencia Registrada | Resultado de Aceptación | Estado |
 | :--- | :---: | :---: | :--- | :--- | :---: |
 | **P26** | `F5-E1` | Fase 5 (A1) | Consulta sobre `sqlite_master` en `./pb_data/data.db` de PocketBase listando tablas/colecciones. | Inventario completo de tablas del monolito (`users`, `contactos`, `_collections`, etc.) documentado. | **Aprobado** |
@@ -858,3 +863,39 @@ Continuación exacta de la matriz mínima de pruebas del TP I (`P01`–`P25`), a
 | **P60** | `F7-E12` | Fase 7 (C3) | Activación de regla de alerta en Prometheus (`ServiceUnavailableOr5xxSpike`) pasando a estado `FIRING`. | Detección automatizada de indisponibilidad verificada durante simulación de falla. | **Aprobado** |
 | **P61** | `F7-E13` | Fase 7 (C4) | Auditoría de vulnerabilidades con Trivy (`CRITICAL`/`HIGH`) y generación de 7 manifiestos SBOM CycloneDX con Syft. | Inventario SBOM versionado en `cna/security/` y hallazgos documentados/mitigados. | **Aprobado** |
 | **P62** | `F7-E14` | Fase 7 (C4) | Rotación en caliente de token de API/webhook (`v1` → `v2`) mediante `docker service update` sobre secretos. | Actualización de credenciales con `0%` downtime y sin reconstruir imágenes. | **Aprobado** |
+=======
+### 1. Extensión de la Matriz Consolidada de Pruebas (`P26` en adelante — Fases 5 a 7)
+
+Continuación secuencial de la matriz mínima de pruebas del TP I (`P01`–`P12`) y fases intermedias (`P13`–`P25`), mapeando cada evidencia verificable generada desde la **Fase 5** hasta la **Fase 7**:
+
+| ID | Dimensión | Prueba y Evidencia Registrada | Resultado de Aceptación | Estado |
+| :--- | :--- | :--- | :--- | :---: |
+| **P26** | Descomposición CNA (F5) | Modelo de contexto C4, fronteras de dominio y contrato OpenAPI `/v2` versionado (`F5-E1`). | Arquitectura objetivo desacoplada documentada y validada contra especificación. | **Aprobado** |
+| **P27** | Microservicios Go (F5) | Compilación multi-stage Alpine de `search-svc`, `audit-svc`, `export-svc` y `media-svc` con `/healthz` y `/metrics` (`F5-E2`). | Imágenes ligeras (~23 MB) operativas exponiendo estado de salud y telemetría Prometheus. | **Aprobado** |
+| **P28** | Puente de Eventos (F5) | Recepción de webhooks desde PocketBase en `event-bridge` y publicación en NATS JetStream (`F5-E3`). | Desacoplamiento asíncrono funcional con persistencia de mensajes en stream. | **Aprobado** |
+| **P29** | Consumidores Asíncronos (F5) | Procesamiento concurrente de eventos en `search-svc` (S1) y `audit-svc` (S2) (`F5-E4`). | Indexación y registro de auditoría ejecutados sin bloquear la transacción del monolito. | **Aprobado** |
+| **P30** | API Gateway v2 (F5) | Enrutamiento Caddy Gateway con validación JWT/RBAC, rate-limiting y correlación `X-Request-ID` (`F5-E5`). | Tráfico `/v2/*` filtrado, autenticado y trazado de extremo a extremo. | **Aprobado** |
+| **P31** | Persistencia Dual (F5) | Aislamiento de almacenamiento entre MariaDB (monolito) y PocketBase/volúmenes de servicios (`F5-E6`). | Independencia de datos por dominio sin acoplamiento de esquema compartido. | **Aprobado** |
+| **P32** | Flujo End-to-End F5 (F5) | Creación/edición de página en PocketBase y consulta inmediata en `GET /v2/search` (`F5-E7`). | Propagación completa monolito → broker → índice de búsqueda verificada. | **Aprobado** |
+| **P33** | Contrato de Errores F5 (F5) | Respuestas estandarizadas RFC 7807 (`application/problem+json`) y manejo de reintentos (`F5-E8`). | Errores de validación y upstream manejados de forma uniforme. | **Aprobado** |
+| **P34** | Clúster Docker Swarm (F6) | Inicialización multi-nodo con **VM-1** (`equipo-vm`, Manager) y **VM-2** (`equipo-vm2`, Worker) (`F6-E1`). | Clúster Swarm activo en estado `Ready` sobre red overlay cifrada. | **Aprobado** |
+| **P35** | Despliegue Declarativo (F6) | Despliegue del stack completo mediante `docker stack deploy` con un único comando (`F6-E2`). | Todos los servicios convergen al estado deseado (`1/1` o `N/N`) automáticamente. | **Aprobado** |
+| **P36** | Service Discovery Interno (F6) | Resolución DNS interna de Swarm (`tasks.<servicio>`) y balanceo VIP en red overlay (`F6-E3`). | Comunicación interna sin IPs estáticas acopladas en código. | **Aprobado** |
+| **P37** | Gestión de Secretos (F6) | Inyección de credenciales (`webhook_token`, `svc_reader_password`) vía `/run/secrets/` (`F6-E4`). | Cero contraseñas en texto plano dentro de imágenes o variables de entorno visibles. | **Aprobado** |
+| **P38** | Límites de Recursos (F6) | Configuración de `reservations` y `limits` de CPU/RAM por servicio en el manifiesto del stack (`F6-E5`). | Contención de consumo por contenedor evitando inanición de recursos en los nodos. | **Aprobado** |
+| **P39** | Rolling Updates (F6) | Actualización progresiva de versión con `update_config` (`parallelism: 1`, `order: start-first`) (`F6-E6`). | Despliegue de cambios sin pérdida de disponibilidad (`0%` errores HTTP). | **Aprobado** |
+| **P40** | Resiliencia — Caída de Servicio (F7) | Terminación forzada (`docker kill`) de réplica `search-svc` y auto-reparación del orquestador (`F7-E1`). | Swarm detecta la falla y levanta réplica saludable en `< 10s` sin intervención manual. | **Aprobado** |
+| **P41** | Resiliencia — Caída de Broker (F7) | Detención temporal de NATS JetStream, encolamiento/reintento y drenaje al restablecer (`F7-E2`). | Cero pérdida de mensajes persistidos en JetStream tras recuperación del broker. | **Aprobado** |
+| **P42** | Resiliencia — Aislamiento de Red (F7) | Simulación de latencia/falla de upstream (`S2 audit-svc` detenido) y degradación controlada (`F7-E3`). | `search-svc` y Gateway continúan operando de forma aislada sin cascada de fallos. | **Aprobado** |
+| **P43** | Resiliencia — Cola DLQ (F7) | Inyección de evento malformado/no procesable y enrutamiento a Dead Letter Queue tras `MaxDeliver` (`F7-E4`). | Mensajes tóxicos aislados en DLQ sin bloquear el flujo principal del consumidor. | **Aprobado** |
+| **P44** | Escalamiento Horizontal (F7) | Escalamiento dinámico `docker service scale search-svc=3` y distribución de carga (`F7-E5`). | Tráfico repartido entre las 3 réplicas activas verificable por hostname/instancia. | **Aprobado** |
+| **P45** | Benchmark Baseline (1 Réplica) (F7) | Prueba de carga `k6` / `ab` sobre `search-svc=1` midiendo throughput (`req/s`) y latencia `p95` (`F7-E6`). | Línea base cuantitativa registrada antes del escalamiento horizontal. | **Aprobado** |
+| **P46** | Benchmark Escalado (3 Réplicas) (F7) | Repetición de prueba de carga con `search-svc=3` bajo idéntica concurrencia (`F7-E7`). | Incremento sustancial de throughput y reducción de latencia `p95`/`p99` bajo carga. | **Aprobado** |
+| **P47** | Análisis de Cuellos de Botella (F7) | Correlación de métricas CPU/RAM/Red durante picos de carga y ajuste de réplicas (`F7-E8`). | Identificación y mitigación documentada del cuello de botella en capa de lectura. | **Aprobado** |
+| **P48** | Observabilidad — Tablero RED (F7) | Dashboard Grafana (`CNA Fase 7 - Métricas RED & Cola JetStream`) con `RATE`, `ERRORS`, `p50/p95/p99` y cola (`F7-E9`). | Visualización en tiempo real de los 4 pilares RED y profundidad de stream NATS. | **Aprobado** |
+| **P49** | Observabilidad — Logs Correlacionados (F7) | Consulta en Loki filtrando por `request_id=req-c3-f7-9901` atravesando Gateway, `event-bridge`, S1 y S2 (`F7-E10`). | Trazabilidad unificada de la misma transacción distribuida en un único hilo temporal. | **Aprobado** |
+| **P50** | Observabilidad — Trazas OTel (F7) | Traza distribuida OpenTelemetry en Jaeger (`4bf92f3`, `22ms`, `3 spans`) edición → JetStream → S1 (`F7-E11`). | Desglose exacto de latencia por tramo entre servicios síncronos y asíncronos. | **Aprobado** |
+| **P51** | Observabilidad — Alerta Activa (F7) | Disparo de regla `ServiceUnavailableOr5xxSpike` a estado `FIRING (3)` durante experimento C1 (`F7-E12`). | Detección proactiva de indisponibilidad verificada en Prometheus Alerts. | **Aprobado** |
+| **P52** | Seguridad — Trivy y SBOM (F7) | Escaneo Trivy (`CRITICAL`/`HIGH`) y generación de 7 SBOM CycloneDX JSON con Syft (`F7-E13`). | Inventario SBOM versionado y 100% de hallazgos críticos justificados en registro 7.5. | **Aprobado** |
+| **P53** | Seguridad — Rotación de Token (F7) | Rotación en caliente de `webhook_token` a `webhook_token_v2` vía `docker service update` (`F7-E14`). | Credencial actualizada sin reconstruir imágenes (`event-bridge:1.0.0`) y `0%` downtime. | **Aprobado** |
+>>>>>>> 1aa107b (Docs: unifica referencias al monolito PocketBase/SQLite en README y ADRs)

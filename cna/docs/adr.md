@@ -6,14 +6,14 @@ Continuación de los registros arquitectónicos del TP I (`ADR-001` a `ADR-005`)
 
 ## ADR-006: Descomposición Modular del Monolito mediante Patrón Strangler Fig y API Gateway v2
 - **Estado:** Aceptado
-- **Contexto:** BookStack concentraba gestión documental, búsqueda, auditoría, exportación y procesamiento multimedia en un único proceso monolítico, dificultando el escalamiento independiente de operaciones de lectura/búsqueda.
-- **Decisión:** Mantener BookStack como núcleo documental (`/`) y extraer los dominios de búsqueda (`search-svc`), auditoría (`audit-svc`), exportación (`export-svc`) y multimedia (`media-svc`) como microservicios autónomos en Go detrás de **Caddy API Gateway** bajo el prefijo versionado `/v2/*`.
+- **Contexto:** PocketBase concentraba gestión documental, búsqueda, auditoría, exportación y procesamiento multimedia en un único proceso monolítico, dificultando el escalamiento independiente de operaciones de lectura/búsqueda.
+- **Decisión:** Mantener PocketBase como núcleo documental (`/`) y extraer los dominios de búsqueda (`search-svc`), auditoría (`audit-svc`), exportación (`export-svc`) y multimedia (`media-svc`) como microservicios autónomos en Go detrás de **Caddy API Gateway** bajo el prefijo versionado `/v2/*`.
 - **Consecuencias:** Permite desplegar y escalar cada dominio de forma independiente manteniendo retrocompatibilidad total con rutas legadas.
 
 ## ADR-007: Mensajería Asíncrona con NATS JetStream y Puente de Eventos (`event-bridge`)
 - **Estado:** Aceptado
 - **Contexto:** La invocación síncrona HTTP desde el monolito hacia múltiples consumidores introducía acoplamiento temporal y riesgo de pérdida de eventos ante caídas parciales.
-- **Decisión:** Implementar **NATS JetStream** como broker de mensajería persistente con streams durables, acknowledgements explícitos (`AckExplicit`), reintentos con backoff y cola de mensajes fallidos (**DLQ**), alimentado por un adaptador desacoplado (`event-bridge` en Node.js) que recibe webhooks autenticados desde BookStack.
+- **Decisión:** Implementar **NATS JetStream** como broker de mensajería persistente con streams durables, acknowledgements explícitos (`AckExplicit`), reintentos con backoff y cola de mensajes fallidos (**DLQ**), alimentado por un adaptador desacoplado (`event-bridge` en Node.js) que recibe webhooks autenticados desde PocketBase.
 - **Consecuencias:** Desacoplamiento temporal completo, absorción de picos de carga y cero pérdida de eventos ante indisponibilidad temporal de consumidores (`S1`/`S2`).
 
 ## ADR-008: Orquestación Multi-Nodo con Docker Swarm y Gestión Inmutable de Secretos
