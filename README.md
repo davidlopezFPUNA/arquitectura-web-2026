@@ -825,34 +825,30 @@ Se amplía el registro de riesgos y hallazgos de seguridad con tres hallazgos id
 
 ---
 
----
-
----
-
 ## 6.5. C5 – Matriz Consolidada de Pruebas (`P26` a `P62` — Fases 5 a 7)
 
-Continuación exacta de la matriz mínima de pruebas del TP I (`P01`–`P25`), alineada 1:1 con la **Tabla 11 (Matriz de Evidencias Esperadas)** desde **`P26` (`F5-E1`)** hasta **`P62` (`F7-E14`)**:
+Continuación exacta de la matriz mínima de pruebas del TP I (`P01`–`P25`), alineada 1:1 con la **Tabla 11 (Matriz de Evidencias Esperadas)** desde **`P26` (`F5-E1`)** hasta **`P62` (`F7-E14`)** sobre el monolito **PocketBase (`v0.22.58` / SQLite)** y su evolución Cloud Native:
 
 | Prueba | Evidencia | Fase / Ítem | Prueba y Evidencia Registrada | Resultado de Aceptación | Estado |
 | :--- | :---: | :---: | :--- | :--- | :---: |
-| **P26** | `F5-E1` | Fase 5 (A1) | Consulta `information_schema` sobre la base de BookStack listando tablas por dominio funcional. | Inventario relacional completo del monolito documentado por módulo. | **Aprobado** |
-| **P27** | `F5-E2` | Fase 5 (A1) | Matriz de acoplamiento `módulo × tabla` identificando claves foráneas y dependencias de datos. | Fronteras de lectura/escritura y puntos de desacoplamiento identificados. | **Aprobado** |
-| **P28** | `F5-E3` | Fase 5 (A1) | Mapa de contextos delimitados (DDD): Núcleo Documental, Búsqueda, Auditoría, Exportación y Media. | Bounded Contexts definidos sin ciclos de dependencia entre dominios. | **Aprobado** |
+| **P26** | `F5-E1` | Fase 5 (A1) | Consulta sobre `sqlite_master` en `./pb_data/data.db` de PocketBase listando tablas/colecciones. | Inventario completo de tablas del monolito (`users`, `contactos`, `_collections`, etc.) documentado. | **Aprobado** |
+| **P27** | `F5-E2` | Fase 5 (A1) | Matriz de acoplamiento `módulo × tabla` identificando operaciones CRUD y dependencias de colecciones SQLite. | Fronteras de lectura/escritura y puntos de extracción hacia microservicios identificados. | **Aprobado** |
+| **P28** | `F5-E3` | Fase 5 (A1) | Mapa de contextos delimitados (DDD): Núcleo PocketBase, Búsqueda (`S1`), Auditoría (`S2`), Exportación (`S3`) y Media. | Bounded Contexts definidos con `event-bridge` como Capa Anticorrupción (ACL). | **Aprobado** |
 | **P29** | `F5-E4` | Fase 5 (A3) | Validación sintáctica y semántica con Spectral de contratos OpenAPI (`/v2`) y AsyncAPI (`events`). | Contratos REST y de eventos validados con `0` errores de especificación. | **Aprobado** |
-| **P30** | `F5-E5` | Fase 5 (A4) | Diagrama C4 Nivel 1 (Contexto del Sistema) mostrando actores, monolito y ecosistema CNA. | Vista de contexto aprobada reflejando integración externa vía TLS. | **Aprobado** |
-| **P31** | `F5-E6` | Fase 5 (A4) | Diagrama C4 Nivel 2 (Contenedores) detallando Gateway, BookStack, NATS, microservicios y observabilidad. | Topología de contenedores, protocolos y almacenamiento desacoplado validada. | **Aprobado** |
+| **P30** | `F5-E5` | Fase 5 (A4) | Diagrama C4 Nivel 1 (Contexto del Sistema) mostrando actores, monolito PocketBase y ecosistema CNA. | Vista de contexto aprobada reflejando integración externa vía TLS. | **Aprobado** |
+| **P31** | `F5-E6` | Fase 5 (A4) | Diagrama C4 Nivel 2 (Contenedores) detallando Gateway, PocketBase, NATS, microservicios y observabilidad. | Topología de contenedores, protocolos y almacenamiento desacoplado validada. | **Aprobado** |
 | **P32** | `F5-E7` | Fase 5 (A4) | Diagramas de secuencia UML incluyendo flujos nominales y caminos de error/reintento (DLQ). | Comportamiento síncrono/asíncrono y manejo de fallos documentados. | **Aprobado** |
 | **P33** | `F6-E1` | Fase 6 (B1) | Inspección `docker node ls` / `docker info` verificando nodos activos del clúster (`VM-1` Manager, `VM-2` Worker). | Clúster multi-nodo operativo en estado `Ready` y `Active`. | **Aprobado** |
 | **P34** | `F6-E2` | Fase 6 (B1) | Salida de `ufw status verbose` en `VM-1` y `VM-2` comprobando reglas de filtrado perimetral e interno. | Solo puertos estrictamente autorizados (`22`, `80`, `443` externos) habilitados. | **Aprobado** |
-| **P35** | `F6-E3` | Fase 6 (B1) | Inspección OpenSSL del certificado X.509 verificando doble SAN (`proyecto-web.local` y `api.proyecto-web.local`). | Cifrado TLS funcional cubriendo tanto el monolito como el API Gateway v2. | **Aprobado** |
-| **P36** | `F6-E4` | Fase 6 (B2.1) | Prueba funcional de búsqueda vía `GET /v2/search` antes y después de crear/editar página en BookStack. | Índice actualizado de forma asíncrona reflejando el nuevo contenido. | **Aprobado** |
+| **P35** | `F6-E3` | Fase 6 (B1) | Inspección OpenSSL del certificado X.509 verificando doble entrada DNS en el SAN (monolito + `api.*`). | Cifrado TLS funcional cubriendo tanto PocketBase como el API Gateway v2. | **Aprobado** |
+| **P36** | `F6-E4` | Fase 6 (B2.1) | Prueba funcional de búsqueda vía `GET /v2/search` antes y después de crear/editar registro en PocketBase. | Índice actualizado de forma asíncrona reflejando el nuevo contenido. | **Aprobado** |
 | **P37** | `F6-E5` | Fase 6 (B2.2) | Envío duplicado de evento con idéntico identificador hacia `audit-svc` (`S2`) verificando deduplicación. | Idempotencia garantizada sin registros duplicados en bitácora. | **Aprobado** |
-| **P38** | `F6-E6` | Fase 6 (B2.3) | Ejecución completa de trabajo asíncrono de exportación documental vía `export-svc` (`POST` → `GET` estado). | Ciclo de vida completo (`queued` → `processing` → `completed`) verificado. | **Aprobado** |
+| **P38** | `F6-E6` | Fase 6 (B2.3) | Ejecución completa de trabajo asíncrono de exportación vía `export-svc` (`POST` → `GET` estado). | Ciclo de vida completo (`queued` → `processing` → `completed`) verificado. | **Aprobado** |
 | **P39** | `F6-E7` | Fase 6 (B2.3) | Verificación de artefacto resultante almacenado en el almacenamiento de objetos / volumen de exportación. | Archivo exportado accesible mediante enlace/endpoint seguro. | **Aprobado** |
 | **P40** | `F6-E8` | Fase 6 (B2.4) | Subida de archivo multimedia y obtención de miniatura procesada a través de `media-svc` vía Gateway. | Procesamiento de adjuntos desacoplado operativo bajo `/v2/media`. | **Aprobado** |
 | **P41** | `F6-E9` | Fase 6 (B3) | Listado `docker images` mostrando etiquetas versionadas (`1.0.0-<sha>`) y tamaños compactos (~23 MB Alpine). | Imágenes multi-stage optimizadas y etiquetadas de forma reproducible. | **Aprobado** |
 | **P42** | `F6-E10` | Fase 6 (B3) | Salida `docker inspect` validando usuario no-root, límites de CPU/RAM y sonda `HEALTHCHECK` activa. | Contenedores endurecidos operando con privilegios mínimos y recursos acotados. | **Aprobado** |
-| **P43** | `F6-E11` | Fase 6 (B4) | Configuración de webhook saliente en BookStack apuntando a `event-bridge` con secreto de autenticación. | Integración sin modificar código fuente del monolito verificada. | **Aprobado** |
+| **P43** | `F6-E11` | Fase 6 (B4) | Configuración de webhook saliente en PocketBase apuntando a `event-bridge` con secreto de autenticación. | Integración sin modificar el binario/código fuente de PocketBase verificada. | **Aprobado** |
 | **P44** | `F6-E12` | Fase 6 (B4) | Traza y métricas de NATS JetStream confirmando recepción y persistencia del evento publicado por `event-bridge`. | Desacoplamiento efectivo entre productor y consumidores en el stream. | **Aprobado** |
 | **P45** | `F6-E13` | Fase 6 (B4) | Inyección de payload malformado/no procesable y verificación de enrutamiento hacia Dead Letter Queue (DLQ). | Mensajes tóxicos aislados tras agotar reintentos sin bloquear la cola principal. | **Aprobado** |
 | **P46** | `F6-E14` | Fase 6 (B5) | Validación de sintaxis del proxy inverso (`caddy validate` / `nginx -t`) y bloques de enrutamiento `/v2/*`. | Configuración de API Gateway libre de errores y enrutamiento segregado. | **Aprobado** |
@@ -863,12 +859,12 @@ Continuación exacta de la matriz mínima de pruebas del TP I (`P01`–`P25`), a
 | **P51** | `F7-E3` | Fase 7 (C1) | **Experimento X3:** Caída de worker durante procesamiento de exportación y reintento automático del job. | Trabajo reasignado y completado exitosamente tras recuperación del worker. | **Aprobado** |
 | **P52** | `F7-E4` | Fase 7 (C1) | **Experimento X4:** Apagado controlado de nodo `VM-2` y verificación de reconvergencia de tareas en el clúster. | El plano de control detecta el nodo `Down` y preserva la disponibilidad global. | **Aprobado** |
 | **P53** | `F7-E5` | Fase 7 (C1) | **Experimento X5:** Prueba de `timeout`, `backoff` exponencial y apertura de circuito ante falla prolongada. | Degradación controlada evitando fallos en cascada hacia el Gateway. | **Aprobado** |
-| **P54** | `F7-E6` | Fase 7 (C2) | Benchmark de carga con `k6` comparando rendimiento de búsqueda en monolito legado vs. `search-svc` (`S1`). | Mejora sustancial de throughput (`req/s`) y menor latencia `p95` en `S1`. | **Aprobado** |
+| **P54** | `F7-E6` | Fase 7 (C2) | Benchmark de carga con `k6` comparando rendimiento de consulta en PocketBase vs. `search-svc` (`S1`). | Mejora sustancial de throughput (`req/s`) y menor latencia `p95` en `S1`. | **Aprobado** |
 | **P55** | `F7-E7` | Fase 7 (C2) | Escalamiento horizontal dinámico `1 → 3` réplicas (`docker service scale`) y prueba bajo carga concurrente. | Balanceo de carga efectivo entre las 3 réplicas y reducción de cola de espera. | **Aprobado** |
 | **P56** | `F7-E8` | Fase 7 (C2) | Monitoreo de consumo de CPU, RAM y red por nodo (`VM-1` vs `VM-2`) durante las pruebas de estrés. | Ausencia de saturación de memoria (OOM) y cumplimiento de `limits` declarados. | **Aprobado** |
 | **P57** | `F7-E9` | Fase 7 (C3) | Tablero RED en Grafana (`RATE`, `ERRORS`, `p50/p95/p99`) junto con profundidad de cola de NATS JetStream. | Visibilidad en tiempo real del estado de salud y rendimiento de todos los servicios. | **Aprobado** |
 | **P58** | `F7-E10` | Fase 7 (C3) | Consulta centralizada en Grafana Loki filtrando por `request_id` (`X-Request-ID`) a través de toda la cadena. | Logs estructurados correlacionados de extremo a extremo en un único flujo. | **Aprobado** |
-| **P59** | `F7-E11` | Fase 7 (C3) | Visualización de traza distribuida OpenTelemetry en Jaeger desde edición en monolito hasta indexación en `S1`. | Desglose exacto de spans y latencias entre tramos síncronos y asíncronos. | **Aprobado** |
+| **P59** | `F7-E11` | Fase 7 (C3) | Visualización de traza distribuida OpenTelemetry en Jaeger desde evento en PocketBase hasta indexación en `S1`. | Desglose exacto de spans y latencias entre tramos síncronos y asíncronos. | **Aprobado** |
 | **P60** | `F7-E12` | Fase 7 (C3) | Activación de regla de alerta en Prometheus (`ServiceUnavailableOr5xxSpike`) pasando a estado `FIRING`. | Detección automatizada de indisponibilidad verificada durante simulación de falla. | **Aprobado** |
 | **P61** | `F7-E13` | Fase 7 (C4) | Auditoría de vulnerabilidades con Trivy (`CRITICAL`/`HIGH`) y generación de 7 manifiestos SBOM CycloneDX con Syft. | Inventario SBOM versionado en `cna/security/` y hallazgos documentados/mitigados. | **Aprobado** |
 | **P62** | `F7-E14` | Fase 7 (C4) | Rotación en caliente de token de API/webhook (`v1` → `v2`) mediante `docker service update` sobre secretos. | Actualización de credenciales con `0%` downtime y sin reconstruir imágenes. | **Aprobado** |
