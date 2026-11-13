@@ -383,15 +383,6 @@ Evaluación detallada de riesgos de arquitectura sobre la infraestructura asigna
 
 ---
 
-## 5.1. B1 – Infraestructura Multi-Nodo
-
-### Descripción del Entorno
-Se ha configurado una infraestructura distribuida compuesta por dos máquinas virtuales Ubuntu Server 24.04 sobre VirtualBox:
-* **VM-1 (Gateway / Monolito Core):** `equipo-vm` (IP: `192.168.1.25/27`) - Encargada de recibir el tráfico HTTP/HTTPS externo y ejecutar la API principal de PocketBase sobre SQLite.
-* **VM-2 (Clúster Worker / Microservicios):** `equipo-vm2` (IP: `192.168.1.26/27`) - Clon enlazado configurado para hospedar de forma aislada los microservicios desacoplados y el bus de eventos.
-
----
-
 # Bloque II – Fase 6: Construcción, Contenerización y Despliegue Distribuido
 ---
 
