@@ -825,4 +825,41 @@ Se amplía el registro de riesgos y hallazgos de seguridad con tres hallazgos id
 
 ---
 
+---
 
+## 6.5. C5 – Matriz de Pruebas, Demostración y Defensa
+
+### 1. Extensión de la Matriz Consolidada de Pruebas (`P26` en adelante — Fases 5 a 7)
+
+Continuación secuencial de la matriz mínima de pruebas del TP I (`P01`–`P12`) y fases intermedias (`P13`–`P25`), mapeando cada evidencia verificable generada desde la **Fase 5** hasta la **Fase 7**:
+
+| ID | Dimensión | Prueba y Evidencia Registrada | Resultado de Aceptación | Estado |
+| :--- | :--- | :--- | :--- | :---: |
+| **P26** | Descomposición CNA (F5) | Modelo de contexto C4, fronteras de dominio y contrato OpenAPI `/v2` versionado (`F5-E1`). | Arquitectura objetivo desacoplada documentada y validada contra especificación. | **Aprobado** |
+| **P27** | Microservicios Go (F5) | Compilación multi-stage Alpine de `search-svc`, `audit-svc`, `export-svc` y `media-svc` con `/healthz` y `/metrics` (`F5-E2`). | Imágenes ligeras (~23 MB) operativas exponiendo estado de salud y telemetría Prometheus. | **Aprobado** |
+| **P28** | Puente de Eventos (F5) | Recepción de webhooks desde BookStack en `event-bridge` y publicación en NATS JetStream (`F5-E3`). | Desacoplamiento asíncrono funcional con persistencia de mensajes en stream. | **Aprobado** |
+| **P29** | Consumidores Asíncronos (F5) | Procesamiento concurrente de eventos en `search-svc` (S1) y `audit-svc` (S2) (`F5-E4`). | Indexación y registro de auditoría ejecutados sin bloquear la transacción del monolito. | **Aprobado** |
+| **P30** | API Gateway v2 (F5) | Enrutamiento Caddy Gateway con validación JWT/RBAC, rate-limiting y correlación `X-Request-ID` (`F5-E5`). | Tráfico `/v2/*` filtrado, autenticado y trazado de extremo a extremo. | **Aprobado** |
+| **P31** | Persistencia Dual (F5) | Aislamiento de almacenamiento entre MariaDB (monolito) y PocketBase/volúmenes de servicios (`F5-E6`). | Independencia de datos por dominio sin acoplamiento de esquema compartido. | **Aprobado** |
+| **P32** | Flujo End-to-End F5 (F5) | Creación/edición de página en BookStack y consulta inmediata en `GET /v2/search` (`F5-E7`). | Propagación completa monolito → broker → índice de búsqueda verificada. | **Aprobado** |
+| **P33** | Contrato de Errores F5 (F5) | Respuestas estandarizadas RFC 7807 (`application/problem+json`) y manejo de reintentos (`F5-E8`). | Errores de validación y upstream manejados de forma uniforme. | **Aprobado** |
+| **P34** | Clúster Docker Swarm (F6) | Inicialización multi-nodo con **VM-1** (`equipo-vm`, Manager) y **VM-2** (`equipo-vm2`, Worker) (`F6-E1`). | Clúster Swarm activo en estado `Ready` sobre red overlay cifrada. | **Aprobado** |
+| **P35** | Despliegue Declarativo (F6) | Despliegue del stack completo mediante `docker stack deploy` con un único comando (`F6-E2`). | Todos los servicios convergen al estado deseado (`1/1` o `N/N`) automáticamente. | **Aprobado** |
+| **P36** | Service Discovery Interno (F6) | Resolución DNS interna de Swarm (`tasks.<servicio>`) y balanceo VIP en red overlay (`F6-E3`). | Comunicación interna sin IPs estáticas acopladas en código. | **Aprobado** |
+| **P37** | Gestión de Secretos (F6) | Inyección de credenciales (`webhook_token`, `svc_reader_password`) vía `/run/secrets/` (`F6-E4`). | Cero contraseñas en texto plano dentro de imágenes o variables de entorno visibles. | **Aprobado** |
+| **P38** | Límites de Recursos (F6) | Configuración de `reservations` y `limits` de CPU/RAM por servicio en el manifiesto del stack (`F6-E5`). | Contención de consumo por contenedor evitando inanición de recursos en los nodos. | **Aprobado** |
+| **P39** | Rolling Updates (F6) | Actualización progresiva de versión con `update_config` (`parallelism: 1`, `order: start-first`) (`F6-E6`). | Despliegue de cambios sin pérdida de disponibilidad (`0%` errores HTTP). | **Aprobado** |
+| **P40** | Resiliencia — Caída de Servicio (F7) | Terminación forzada (`docker kill`) de réplica `search-svc` y auto-reparación del orquestador (`F7-E1`). | Swarm detecta la falla y levanta réplica saludable en `< 10s` sin intervención manual. | **Aprobado** |
+| **P41** | Resiliencia — Caída de Broker (F7) | Detención temporal de NATS JetStream, encolamiento/reintento y drenaje al restablecer (`F7-E2`). | Cero pérdida de mensajes persistidos en JetStream tras recuperación del broker. | **Aprobado** |
+| **P42** | Resiliencia — Aislamiento de Red (F7) | Simulación de latencia/falla de upstream (`S2 audit-svc` detenido) y degradación controlada (`F7-E3`). | `search-svc` y Gateway continúan operando de forma aislada sin cascada de fallos. | **Aprobado** |
+| **P43** | Resiliencia — Cola DLQ (F7) | Inyección de evento malformado/no procesable y enrutamiento a Dead Letter Queue tras `MaxDeliver` (`F7-E4`). | Mensajes tóxicos aislados en DLQ sin bloquear el flujo principal del consumidor. | **Aprobado** |
+| **P44** | Escalamiento Horizontal (F7) | Escalamiento dinámico `docker service scale search-svc=3` y distribución de carga (`F7-E5`). | Tráfico repartido entre las 3 réplicas activas verificable por hostname/instancia. | **Aprobado** |
+| **P45** | Benchmark Baseline (1 Réplica) (F7) | Prueba de carga `k6` / `ab` sobre `search-svc=1` midiendo throughput (`req/s`) y latencia `p95` (`F7-E6`). | Línea base cuantitativa registrada antes del escalamiento horizontal. | **Aprobado** |
+| **P46** | Benchmark Escalado (3 Réplicas) (F7) | Repetición de prueba de carga con `search-svc=3` bajo idéntica concurrencia (`F7-E7`). | Incremento sustancial de throughput y reducción de latencia `p95`/`p99` bajo carga. | **Aprobado** |
+| **P47** | Análisis de Cuellos de Botella (F7) | Correlación de métricas CPU/RAM/Red durante picos de carga y ajuste de réplicas (`F7-E8`). | Identificación y mitigación documentada del cuello de botella en capa de lectura. | **Aprobado** |
+| **P48** | Observabilidad — Tablero RED (F7) | Dashboard Grafana (`CNA Fase 7 - Métricas RED & Cola JetStream`) con `RATE`, `ERRORS`, `p50/p95/p99` y cola (`F7-E9`). | Visualización en tiempo real de los 4 pilares RED y profundidad de stream NATS. | **Aprobado** |
+| **P49** | Observabilidad — Logs Correlacionados (F7) | Consulta en Loki filtrando por `request_id=req-c3-f7-9901` atravesando Gateway, `event-bridge`, S1 y S2 (`F7-E10`). | Trazabilidad unificada de la misma transacción distribuida en un único hilo temporal. | **Aprobado** |
+| **P50** | Observabilidad — Trazas OTel (F7) | Traza distribuida OpenTelemetry en Jaeger (`4bf92f3`, `22ms`, `3 spans`) edición → JetStream → S1 (`F7-E11`). | Desglose exacto de latencia por tramo entre servicios síncronos y asíncronos. | **Aprobado** |
+| **P51** | Observabilidad — Alerta Activa (F7) | Disparo de regla `ServiceUnavailableOr5xxSpike` a estado `FIRING (3)` durante experimento C1 (`F7-E12`). | Detección proactiva de indisponibilidad verificada en Prometheus Alerts. | **Aprobado** |
+| **P52** | Seguridad — Trivy y SBOM (F7) | Escaneo Trivy (`CRITICAL`/`HIGH`) y generación de 7 SBOM CycloneDX JSON con Syft (`F7-E13`). | Inventario SBOM versionado y 100% de hallazgos críticos justificados en registro 7.5. | **Aprobado** |
+| **P53** | Seguridad — Rotación de Token (F7) | Rotación en caliente de `webhook_token` a `webhook_token_v2` vía `docker service update` (`F7-E14`). | Credencial actualizada sin reconstruir imágenes (`event-bridge:1.0.0`) y `0%` downtime. | **Aprobado** |
