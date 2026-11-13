@@ -126,17 +126,16 @@ flowchart TD
 
 ---
 
-### ADR-008: Plataforma de Orquestación
-
+### ADR-008: Plataforma de Orquestación Multi-Nodo
 * **Estatus:** Aprobado
-* **Contexto:** La infraestructura asignada se limita a máquinas virtuales en VirtualBox con 2 vCPU, 2 GB de RAM y 20 GB de Disco sobre Ubuntu Server 24.04.4 LTS.
-* **Decisión:** Utilizar **Docker Compose** como motor de orquestación y despliegue del entorno.
-* **Alternativas Descartadas:** 
-  * *k3s (Lightweight Kubernetes):* Descartado porque el consumo base del plano de control en memoria RAM sobrepasa la capacidad disponible (2 GB RAM) e inestabiliza los nodos.
-  * *Docker Swarm:* Descartado por añadir complejidad sintáctica no requerida para el entorno mono-nodo actual.
-* **Consecuencias:** 
-  * *Positivas:* Consumo insignificante de recursos de sistema, sintaxis declarativa simple y rápido ciclo de despliegue sobre Ubuntu Server 24.04.4 LTS.
-  * *Negativas:* Ausencia de autoscaling automático y orquestación multi-nodo avanzada.
+* **Contexto:** La infraestructura asignada consta de dos máquinas virtuales en VirtualBox (`VM-1` Manager y `VM-2` Worker, con 2 vCPU y 2 GB de RAM cada una sobre Ubuntu Server 24.04.5 LTS)[cite: 9, 19]. Se requiere orquestación multi-nodo, auto-reparación (*self-healing*), escalamiento horizontal de réplicas y gestión nativa de secretos con bajo consumo de recursos[cite: 35].
+* **Decisión:** Utilizar **Docker Swarm** (`docker stack deploy -c docker-stack.yml`) como orquestador del clúster multi-nodo[cite: 3, 19, 20].
+* **Alternativas Descartadas:**
+  * *k3s (Lightweight Kubernetes):* Descartado porque el consumo base del plano de control en memoria RAM sobrepasa la capacidad disponible (2 GB RAM por nodo) e inestabiliza los contenedores[cite: 35].
+  * *Docker Compose aislado:* Descartado en el despliegue final por carecer de programación distribuida entre múltiples nodos (`VM-1` y `VM-2`), red *overlay* nativa cifrada y auto-reparación automática ante caída de réplicas o nodos[cite: 19, 35].
+* **Consecuencias:**
+  * *Positivas:* Huella mínima de memoria del plano de control integrado en Docker Engine, redes *overlay* nativas, `Docker Swarm Secrets` montados en memoria y convergencia automática ante fallos[cite: 19, 22, 35].
+  * *Negativas:* Menor ecosistema de operadores avanzados frente a Kubernetes[cite: 35].
 
 ---
 
