@@ -1,0 +1,48 @@
+{
+  "title": "CNA Fase 7 - Métricas RED & Cola JetStream",
+  "uid": "cna-red-f7",
+  "schemaVersion": 38,
+  "version": 2,
+  "refresh": "5s",
+  "panels": [
+    {
+      "id": 1,
+      "title": "RATE - Tasa de Peticiones por Servicio (req/s)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "sum by (instance) (rate(http_requests_total[1m]))", "legendFormat": "{{instance}}" }
+      ]
+    },
+    {
+      "id": 2,
+      "title": "ERRORS - Tasa de Errores / Caídas por Servicio",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "sum by (instance) (rate(http_requests_total{code=~\"5..\"}[1m])) or (1 - up{job=\"microservices\"})", "legendFormat": "Errores/Down {{instance}}" }
+      ]
+    },
+    {
+      "id": 3,
+      "title": "DURATION - Latencia p50 / p95 / p99 (segundos)",
+      "type": "timeseries",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket[1m])) by (le))", "legendFormat": "p50" },
+        { "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[1m])) by (le))", "legendFormat": "p95" },
+        { "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket[1m])) by (le))", "legendFormat": "p99" }
+      ]
+    },
+    {
+      "id": 4,
+      "title": "BROKER - Profundidad de Cola y Flujo NATS JetStream",
+      "type": "timeseries",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "gnatsd_jsz_messages or gnatsd_varz_in_msgs", "legendFormat": "Mensajes JetStream / Broker" },
+        { "expr": "gnatsd_jsz_streams or gnatsd_varz_connections", "legendFormat": "Streams / Conexiones Activas" }
+      ]
+    }
+  ]
+}

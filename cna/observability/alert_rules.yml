@@ -1,0 +1,20 @@
+groups:
+  - name: arquitectura_c3_alerts
+    rules:
+      - alert: ServiceUnavailableOr5xxSpike
+        expr: up{job="microservices"} == 0 or sum(rate(http_requests_total{code=~"5.."}[1m])) > 0.05
+        for: 10s
+        labels:
+          severity: critical
+        annotations:
+          summary: "Caída o tasa de errores 5xx detectada en microservicios"
+          description: "El servicio {{ $labels.instance }} dejó de responder o superó el umbral de errores 5xx."
+
+      - alert: JetStreamPendingMessagesHigh
+        expr: gnatsd_jsz_messages > 5
+        for: 10s
+        labels:
+          severity: warning
+        annotations:
+          summary: "Acumulación de mensajes pendientes en NATS JetStream (> 5)"
+          description: "La profundidad de cola en JetStream superó el umbral configurado."

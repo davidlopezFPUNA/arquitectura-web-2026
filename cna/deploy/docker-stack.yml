@@ -1,0 +1,144 @@
+version: "3.8"
+
+services:
+  nats-broker:
+    image: nats:2.10-alpine
+    command: ["-js", "-m", "8222"]
+    ports:
+      - target: 4222
+        published: 4222
+        mode: host
+      - target: 8222
+        published: 8222
+        mode: host
+    networks:
+      - backend-net
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == equipo-vm2
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8222/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  event-bridge:
+    image: event-bridge:1.0.0
+    environment:
+      WEBHOOK_TOKEN: "secret-webhook-token-2026"
+      NATS_URL: "nats://nats-broker:4222"
+    secrets:
+      - webhook_token
+    ports:
+      - target: 8090
+        published: 8090
+        mode: host
+    networks:
+      - backend-net
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == equipo-vm2
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:8090/healthz"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  search-svc:
+    image: search-svc:1.0.0-41231e6
+    environment:
+      MONOLITH_URL: "http://192.168.1.25:8090"
+      NATS_URL: "nats://nats-broker:4222"
+    secrets:
+      - svc_reader_password
+    ports:
+      - target: 8080
+        published: 8000
+        mode: host
+    networks:
+      - backend-net
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == equipo-vm2
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+
+  audit-svc:
+    image: audit-svc:1.0.0-41231e6
+    environment:
+      NATS_URL: "nats://nats-broker:4222"
+    ports:
+      - target: 8080
+        published: 8001
+        mode: host
+    networks:
+      - backend-net
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == equipo-vm2
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+
+  export-svc:
+    image: export-svc:1.0.0-41231e6
+    environment:
+      MONOLITH_URL: "http://192.168.1.25:8090"
+    secrets:
+      - svc_reader_password
+    ports:
+      - target: 8080
+        published: 8002
+        mode: ingress
+    networks:
+      - backend-net
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == equipo-vm2
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+
+  media-svc:
+    image: media-svc:1.0.0-41231e6
+    ports:
+      - target: 8080
+        published: 8003
+        mode: host
+    networks:
+      - backend-net
+    deploy:
+      placement:
+        constraints:
+          - node.hostname == equipo-vm2
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 256M
+
+networks:
+  backend-net:
+    driver: overlay
+
+secrets:
+  webhook_token:
+    external: true
+  svc_reader_password:
+    external: true
