@@ -760,4 +760,69 @@ El ecosistema de observabilidad se encuentra versionado en `cna/observability/` 
 
 ---
 
+---
+
+## 6.4. C4 – Seguridad de la Plataforma y Cadena de Suministro
+
+### 1. Escaneo de Vulnerabilidades con Trivy y Generación de SBOM (Syft)
+
+Se ejecutó un análisis de seguridad de la cadena de suministro sobre todas las imágenes del plano de servicios en **VM-2 (`equipo-vm2`)** mediante **Syft `v1.57.1`** (generación de manifiestos **SBOM** en formato estándar **CycloneDX JSON**, versionados en `cna/security/sbom/`) y **Trivy `v0.76.2`** (auditoría de severidades `HIGH` y `CRITICAL`, reportes archivados en `cna/security/trivy/`):
+
+| Imagen Analizada | Base / Runtime | SBOM Versionado (`cna/security/sbom/`) | `CRITICAL` | `HIGH` | Estado / Justificación Técnica |
+| :--- | :--- | :--- | :---: | :---: | :--- |
+| `search-svc:1.0.0-41231e6` | Alpine `3.19.9` / Go `1.22.12` | `search-svc__1.0.0-41231e6.cdx.json` | **1** | **27** | **Riesgo aceptado / mitigado en red interna:** `CVE-2025-68121` en `stdlib crypto/tls` (TLS session resumption). El contenedor opera exclusivamente en red overlay privada sin exposición TLS directa (TLS termina en Caddy Gateway). |
+| `audit-svc:1.0.0-41231e6` | Alpine `3.19.9` / Go `1.22.12` | `audit-svc__1.0.0-41231e6.cdx.json` | **1** | **27** | **Riesgo aceptado / mitigado:** Misma base `stdlib v1.22.12` (`CVE-2025-68121`) y `musl` (`CVE-2026-40200`). Sin tráfico externo directo ni handshakes TLS salientes no confiables. |
+| `export-svc:1.0.0-41231e6` | Alpine `3.19.9` / Go `1.22.12` | `export-svc__1.0.0-41231e6.cdx.json` | **1** | **27** | **Riesgo aceptado / mitigado:** Aislado tras API Gateway con validación JWT/RBAC; planificada actualización de toolchain a Go `1.25.7+` en el siguiente ciclo de build. |
+| `media-svc:1.0.0-41231e6` | Alpine `3.19.9` / Go `1.22.12` | `media-svc__1.0.0-41231e6.cdx.json` | **1** | **27** | **Riesgo aceptado / mitigado:** Procesamiento interno detrás de Gateway; sin terminación TLS directa en el binario Go. |
+| `event-bridge:1.0.0` | Alpine `3.23.4` / Node `20` | `event-bridge__1.0.0.cdx.json` | **1** | **28** | **0 vulnerabilidades en código/dependencias propias** (`nats`, `nkeys.js`, `tweetnacl` limpios). El único `CRITICAL` (`CVE-2026-59873` en `tar 6.2.1`) reside en la herramienta CLI `npm` empaquetada en la imagen base y nunca se invoca en tiempo de ejecución. |
+| `nats:2.10-alpine` | Alpine `3.22.3` / Go `1.24.2` | `nats__2.10-alpine.cdx.json` | **3** | **56** | **Riesgo aceptado / mitigado:** `CVE-2026-31789` (OpenSSL 32-bit X.509; plataforma corre en `x86_64` 64-bit) y `CVE-2025-68121` (`stdlib`). Broker accesible únicamente mediante red overlay Swarm interna. |
+| `pocketbase-svc:1.0.0-a1b2c3d` | Alpine / PocketBase | `pocketbase-svc__1.0.0-a1b2c3d.cdx.json` | **0** | **0** | **SBOM generado y versionado** para trazabilidad completa de componentes. |
+
+---
+
+### 2. Procedimiento de Rotación de Token en Caliente (Zero-Downtime)
+
+Para cumplir con la rotación de credenciales de integración sin reconstruir imágenes de contenedor ni interrumpir el servicio, se ejecutó un *rolling update* de **Docker Swarm Secrets** sobre `arquitectura-stack_event-bridge`:
+
+1. **Verificación previa:** Se comprobó el estado activo de los secretos (`webhook_token` y `svc_reader_password`) y la disponibilidad del endpoint `[http://192.168.1.26:8090/healthz](http://192.168.1.26:8090/healthz)` (`HTTP/1.1 200 OK`).
+2. **Creación del secreto rotado (`webhook_token_v2`):**
+   ```bash
+   printf "secret-webhook-token-2026-rotated-v2" | sudo docker secret create webhook_token_v2 -
+   ```
+3. **Actualización en caliente del servicio Swarm (`--secret-rm` + `--secret-add`):**
+   ```bash
+   sudo docker service update \
+     --secret-rm webhook_token \
+     --secret-add source=webhook_token_v2,target=webhook_token \
+     --env-add WEBHOOK_TOKEN_VERSION=v2 \
+     arquitectura-stack_event-bridge
+   ```
+4. **Validación post-rotación:** Docker Swarm reemplazó la tarea manteniendo exactamente la misma imagen (`event-bridge:1.0.0`, sin `docker build`), convergiendo en `5s` con respuesta continua `HTTP/1.1 200 OK`.
+
+---
+
+### 3. Ampliación del Registro de Hallazgos de Seguridad (Continuación Sección 7.5 del TP I)
+
+Se amplía el registro de riesgos y hallazgos de seguridad con tres hallazgos identificados durante el endurecimiento y auditoría de la Fase 7:
+
+| ID Hallazgo | Componente / Imagen | Descripción del Hallazgo | Severidad | Estado | Justificación / Acción Aplicada |
+| :--- | :--- | :--- | :---: | :---: | :--- |
+| **SEC-F7-01** | `search-svc`, `audit-svc`, `export-svc`, `media-svc` (`Go stdlib v1.22.12`) | Vulnerabilidad `CVE-2025-68121` en `crypto/tls` (validación incorrecta de certificados durante reanudación de sesión TLS) detectada por Trivy. | **CRÍTICA** | **Aceptado temporalmente (Mitigado)** | Los 4 microservicios se ejecutan en una red privada Docker Swarm sin exposición externa ni terminación TLS propia; todo el tráfico externo pasa por Caddy Gateway y el tráfico interno viaja por red overlay aislada. Se programa migración de builder a `golang:1.25-alpine` en el próximo release. |
+| **SEC-F7-02** | `event-bridge:1.0.0` (`npm` / `node-tar 6.2.1`) | Vulnerabilidad `CVE-2026-59873` (DoS mediante descompresión gzip maliciosa en librería `tar` incluida dentro del gestor global `npm`). | **CRÍTICA** | **Aceptado como riesgo (No explotable en runtime)** | Las dependencias directas de la aplicación (`nats`, `nkeys.js`, `tweetnacl`) arrojaron **0 vulnerabilidades**. El paquete `tar` pertenece exclusivamente a la CLI de `npm`, la cual no se ejecuta ni procesa archivos externos en tiempo de ejecución del contenedor. |
+| **SEC-F7-03** | Integración Monolito ↔ `event-bridge` (`webhook_token`) | Exposición prolongada de token estático de integración webhook/API entre BookStack y el puente de eventos. | **ALTA** | **Corregido** | Se implementó rotación inmutable mediante **Docker Swarm Secrets** (`webhook_token` → `webhook_token_v2`) montado en `/run/secrets/webhook_token`, permitiendo revocar y rotar credenciales en caliente sin reconstruir imágenes ni detener el servicio. |
+
+---
+
+### 4. Evidencias Capturadas (6.4 — C4)
+
+#### **Evidencia F7-E13 — Informe consolidado de escaneo Trivy y manifiestos SBOM CycloneDX**
+
+<img width="1879" height="946" alt="image" src="https://github.com/user-attachments/assets/6fb3872d-e33d-4f37-9707-3dc4b4e02753" />
+
+#### **Evidencia F7-E14 — Rotación de token en caliente (`webhook_token_v2`) sin reconstrucción ni caída de servicio**
+
+<img width="835" height="613" alt="image" src="https://github.com/user-attachments/assets/39af2400-c8a4-4029-8ee9-af71d277c085" />
+
+---
+
 
